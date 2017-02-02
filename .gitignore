@@ -1,0 +1,9 @@
+.idea
+src/waves_adaptors.egg-info/*
+build/
+dist/
+jobs/*
+!jobs/.gitkeep
+logs/
+!logs/.gitkeep
+src/tests/settings.ini
