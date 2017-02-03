@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='waves-galaxy-adaptors',
-    version='0.0.1',
+    version='0.0.3',
     package_dir={'': 'src'},
     packages=find_packages('src', exclude=("tests*",)),
     url='https://github.com/lirmm/waves-galaxy-adaptors',
@@ -23,7 +23,8 @@ setup(
     include_package_data=True,
     namespace_packages=['waves'],
     install_requires=[
-        'waves-adaptors>=0.0.1',
+        'waves-adaptors>=0.0.2',
+        'bioblend>=0.8.0'
     ],
     classifiers=[
         'Environment :: Web Environment',

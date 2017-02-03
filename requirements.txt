@@ -1,12 +1,2 @@
-apache-libcloud==1.4.0
 bioblend==0.8.0
-boto==2.44.0
-colorama==0.3.7
-netifaces==0.10.4
-PyYAML==3.12
-radical.utils==0.44
-requests==2.12.3
-requests-toolbelt==0.7.0
-saga-python==0.44
-six==1.10.0
-wheel==0.24.0
+waves-adaptors>=0.0.1

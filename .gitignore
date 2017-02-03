@@ -7,3 +7,4 @@ jobs/*
 logs/
 !logs/.gitkeep
 src/tests/settings.ini
+.directory

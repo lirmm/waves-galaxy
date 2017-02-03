@@ -11,6 +11,9 @@ src/waves/adaptors/addons/api/galaxy/__init__.py
 src/waves/adaptors/addons/api/galaxy/exception.py
 src/waves/adaptors/addons/api/galaxy/tool.py
 src/waves/adaptors/addons/api/galaxy/workflow.py
+src/waves/adaptors/importers/__init__.py
+src/waves/adaptors/importers/galaxy/__init__.py
+src/waves/adaptors/importers/galaxy/galaxy.py
 src/waves_galaxy_adaptors.egg-info/PKG-INFO
 src/waves_galaxy_adaptors.egg-info/SOURCES.txt
 src/waves_galaxy_adaptors.egg-info/dependency_links.txt
