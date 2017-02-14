@@ -9,13 +9,13 @@ import bioblend
 import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
-from waves.adaptors.core.api.base import RemoteApiAdaptor
+from waves_adaptors.core.api.base import RemoteApiAdaptor
 
-import waves.adaptors.const
-import waves.adaptors.utils
+import waves_adaptors.const
+import waves_adaptors.utils
 from exception import GalaxyAdaptorConnectionError
-from waves.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-from waves.adaptors.utils import slugify
+from waves_adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
+from waves_adaptors.utils import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -44,18 +44,18 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
     def __init__(self, **kwargs):
         super(GalaxyJobAdaptor, self).__init__(**kwargs)
         self._states_map = dict(
-            new=waves.adaptors.const.JOB_QUEUED,
-            queued=waves.adaptors.const.JOB_QUEUED,
-            running=waves.adaptors.const.JOB_RUNNING,
-            waiting=waves.adaptors.const.JOB_RUNNING,
-            error=waves.adaptors.const.JOB_ERROR,
-            ok=waves.adaptors.const.JOB_COMPLETED
+            new=waves_adaptors.const.JOB_QUEUED,
+            queued=waves_adaptors.const.JOB_QUEUED,
+            running=waves_adaptors.const.JOB_RUNNING,
+            waiting=waves_adaptors.const.JOB_RUNNING,
+            error=waves_adaptors.const.JOB_ERROR,
+            ok=waves_adaptors.const.JOB_COMPLETED
         )
 
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves_adaptors.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -73,7 +73,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves.adaptors.galaxy.GalaxyAdaptorConnectionError`
+        :raise: `waves_adaptors.galaxy.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -256,9 +256,9 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves.adaptors.utils.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
-                                                     started,
-                                                     finished, extra)
+        details = waves_adaptors.utils.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
+                                                              started,
+                                                              finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']

@@ -9,11 +9,11 @@ import bioblend
 import six
 from bioblend import ConnectionError
 
-import waves.adaptors.const
-from waves.adaptors.addons.api.galaxy.exception import GalaxyAdaptorConnectionError
-from waves.adaptors.exceptions.importers import *
-from waves.adaptors.dto.services import *
-from waves.adaptors.core.base import AdaptorImporter
+import waves_adaptors.const
+from waves_adaptors.addons.api.galaxy.exception import GalaxyAdaptorConnectionError
+from waves_adaptors.exceptions.importers import *
+from waves_adaptors.dto.services import *
+from waves_adaptors.core.base import AdaptorImporter
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class GalaxyToolImporter(AdaptorImporter):
     _unwanted_categories = [None, 'Get Data', 'Filter and sort', 'Collection Operations', 'Graph/Display Data',
                             'Send Data', 'Text Manipulation', 'Fetch Alignments', ]
 
-    # TODO share constants with waves-webapp (moved in main adaptors module ?)
+    # TODO share constants with waves_adaptors-webapp (moved in main adaptors module ?)
     _type_map = dict(
         text='text',
         boolean='boolean',
@@ -328,8 +328,8 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
         self.workflow = self._tool_client.get(id_=tool_id)
         self.workflow_full_description = self.workflow.export()
         # TODO refactor this to import values from workflow
-        return waves.const.ImportService(name='new workflow', version='1.0', short_description="",
-                                         wrapped=self.workflow.inputs['0'])
+        return waves_adaptors.const.ImportService(name='new workflow', version='1.0', short_description="",
+                                                  wrapped=self.workflow.inputs['0'])
 
     def import_service_params(self, data):
         service_inputs = []

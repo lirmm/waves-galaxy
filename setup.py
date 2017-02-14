@@ -12,7 +12,7 @@ setup(
     version='0.0.3',
     package_dir={'': 'src'},
     packages=find_packages('src', exclude=("tests*",)),
-    url='https://github.com/lirmm/waves-galaxy-adaptors',
+    url='https://github.com/lirmm/waves_adaptors-galaxy-adaptors',
     license='GPLV3',
     author='Marc Chakiachvili',
     author_email='marc.chakiachvili@lirmm.fr',
@@ -21,7 +21,7 @@ setup(
     maintainer='LIRMM - MAB Laboratory - France',
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
-    namespace_packages=['waves'],
+    namespace_packages=['waves_adaptors'],
     install_requires=[
         'waves-adaptors>=0.0.2',
         'bioblend>=0.8.0'
