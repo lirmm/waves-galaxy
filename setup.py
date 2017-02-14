@@ -9,10 +9,10 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='waves-galaxy-adaptors',
-    version='0.0.3',
+    version='0.0.4',
     package_dir={'': 'src'},
     packages=find_packages('src', exclude=("tests*",)),
-    url='https://github.com/lirmm/waves_adaptors-galaxy-adaptors',
+    url='https://github.com/lirmm/waves_addons-galaxy-adaptors',
     license='GPLV3',
     author='Marc Chakiachvili',
     author_email='marc.chakiachvili@lirmm.fr',
@@ -21,7 +21,7 @@ setup(
     maintainer='LIRMM - MAB Laboratory - France',
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
-    namespace_packages=['waves_adaptors'],
+    namespace_packages=['waves_addons', 'waves_addons.adaptors', 'waves_addons.importers'],
     install_requires=[
         'waves-adaptors>=0.0.2',
         'bioblend>=0.8.0'

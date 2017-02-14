@@ -6,11 +6,11 @@ import os
 import tempfile
 
 import bioblend
+from bioblend.galaxy.objects import client
 import six
 from bioblend import ConnectionError
 
-import waves_adaptors.const
-from waves_adaptors.addons.api.galaxy.exception import GalaxyAdaptorConnectionError
+from waves_addons.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
 from waves_adaptors.exceptions.importers import *
 from waves_adaptors.dto.services import *
 from waves_adaptors.core.base import AdaptorImporter
@@ -28,7 +28,7 @@ class GalaxyToolImporter(AdaptorImporter):
     _unwanted_categories = [None, 'Get Data', 'Filter and sort', 'Collection Operations', 'Graph/Display Data',
                             'Send Data', 'Text Manipulation', 'Fetch Alignments', ]
 
-    # TODO share constants with waves_adaptors-webapp (moved in main adaptors module ?)
+    # TODO share constants with waves_addons-webapp (moved in main adaptors module ?)
     _type_map = dict(
         text='text',
         boolean='boolean',
@@ -127,13 +127,13 @@ class GalaxyToolImporter(AdaptorImporter):
                 raise UnmanagedInputTypeException(
                     'Dynamic field \'%s\':%s ' % (tool_input.get('name'), tool_input.get('label')))
             # TODO manage subclasses
-            srv_input = BaseInput(label=tool_input.get('label', tool_input.get('name', None)),
-                                  name=tool_input.get('name'),
-                                  default=tool_input.get('default', None),
-                                  help_text=tool_input.get('help'),
-                                  type=self.map_type(tool_input.get('type')),
-                                  mandatory=tool_input.get('optional', False),
-                                  )
+            srv_input = Input(label=tool_input.get('label', tool_input.get('name', None)),
+                              name=tool_input.get('name'),
+                              default=tool_input.get('default', None),
+                              help_text=tool_input.get('help'),
+                              type=self.map_type(tool_input.get('type')),
+                              mandatory=tool_input.get('optional', False),
+                              )
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
             logger.debug('import func _import_%s ', _import_func.__name__)
             _import_func(tool_input, srv_input)
@@ -165,14 +165,14 @@ class GalaxyToolImporter(AdaptorImporter):
             when_value = related.get('value')
             for when_input in related['inputs']:
                 # TODO manage subclasses
-                when_service_input = BaseInput(label=when_input.get('label', when_input.get('name')),
-                                               name=when_input.get('name'),
-                                               default=when_input.get('value'),
-                                               description=when_input.get('help'),
-                                               short_description=when_input.get('help'),
-                                               type=self.map_type(when_input.get('type')),
-                                               mandatory=False,
-                                               when_value=when_value)
+                when_service_input = Input(label=when_input.get('label', when_input.get('name')),
+                                           name=when_input.get('name'),
+                                           default=when_input.get('value'),
+                                           description=when_input.get('help'),
+                                           short_description=when_input.get('help'),
+                                           type=self.map_type(when_input.get('type')),
+                                           mandatory=False,
+                                           when_value=when_value)
                 when_input_type = when_input.get('type')
                 try:
                     if when_input_type == 'conditional':
@@ -209,6 +209,7 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def _import_number(self, tool_input, service_input):
         service_input.default = tool_input.get('value')
+        _min, _max = None
         if 'min' in tool_input:
             _min = tool_input.get('min', '')
         if 'max' in tool_input:
@@ -229,11 +230,11 @@ class GalaxyToolImporter(AdaptorImporter):
         service_input.format = self._formatter.format_list(options)
 
     def _import_repeat(self, tool_input, service_input=None):
-        return RepeatedGroup.objects.create(name=_get_input_value(tool_input, 'name'),
-                                            title=_get_input_value(tool_input, 'title'),
-                                            max_repeat=_get_input_value(tool_input, 'max'),
-                                            min_repeat=_get_input_value(tool_input, 'min'),
-                                            default=_get_input_value(tool_input, 'default'))
+        return RepeatGroup(name=_get_input_value(tool_input, 'name'),
+                           title=_get_input_value(tool_input, 'title'),
+                           max_repeat=_get_input_value(tool_input, 'max'),
+                           min_repeat=_get_input_value(tool_input, 'min'),
+                           default=_get_input_value(tool_input, 'default'))
 
     def _import_genomebuild(self, tool_input, service_input):
         return self._import_select(tool_input, service_input)
@@ -281,7 +282,7 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
         Connect to remote Galaxy Host
         :return:
         """
-        self._tool_client = bioblend.galaxy.objects.client.ObjWorkflowClient(self._adaptor.connect())
+        self._tool_client = client.ObjWorkflowClient(self._adaptor.connect())
 
     def _list_services(self):
         try:
@@ -328,8 +329,7 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
         self.workflow = self._tool_client.get(id_=tool_id)
         self.workflow_full_description = self.workflow.export()
         # TODO refactor this to import values from workflow
-        return waves_adaptors.const.ImportService(name='new workflow', version='1.0', short_description="",
-                                                  wrapped=self.workflow.inputs['0'])
+        return Service(name='new workflow', version='1.0', short_description="", wrapped=self.workflow.inputs['0'])
 
     def import_service_params(self, data):
         service_inputs = []

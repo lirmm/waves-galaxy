@@ -10,12 +10,10 @@ import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
 from waves_adaptors.core.api.base import RemoteApiAdaptor
+from waves_adaptors.core.base import JobRunDetails
 
-import waves_adaptors.const
-import waves_adaptors.utils
 from exception import GalaxyAdaptorConnectionError
-from waves_adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-from waves_adaptors.utils import slugify
+from waves_adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
 
 logger = logging.getLogger(__name__)
 
@@ -44,18 +42,18 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
     def __init__(self, **kwargs):
         super(GalaxyJobAdaptor, self).__init__(**kwargs)
         self._states_map = dict(
-            new=waves_adaptors.const.JOB_QUEUED,
-            queued=waves_adaptors.const.JOB_QUEUED,
-            running=waves_adaptors.const.JOB_RUNNING,
-            waiting=waves_adaptors.const.JOB_RUNNING,
-            error=waves_adaptors.const.JOB_ERROR,
-            ok=waves_adaptors.const.JOB_COMPLETED
+            new=self.JOB_QUEUED,
+            queued=self.JOB_QUEUED,
+            running=self.JOB_RUNNING,
+            waiting=self.JOB_RUNNING,
+            error=self.JOB_ERROR,
+            ok=self.JOB_COMPLETED
         )
 
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves_adaptors.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves_addons.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -73,7 +71,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves_adaptors.galaxy.GalaxyAdaptorConnectionError`
+        :raise: `waves_addons.galaxy.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -169,10 +167,10 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
                         logger.debug('Dataset Info %s', data_set)
                         job_output = next((x for x in job.outputs if x.remote_output_id == data_set.id), None)
                         if job_output is not None:
-                            job_output.value = slugify(data_set.name)
+                            job_output.value = data_set.name
                             job_output.extension = data_set.file_ext
                         logger.debug(u'Output value updated [%s - %s]' % (
-                            data_set.id, '.'.join([slugify(data_set.name), data_set.file_ext])))
+                            data_set.id, '.'.join([data_set.name, data_set.file_ext])))
                     job.message = "Job queued"
                     return job
                 else:
@@ -256,9 +254,9 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves_adaptors.utils.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
-                                                              started,
-                                                              finished, extra)
+        details = JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
+                                started,
+                                finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']

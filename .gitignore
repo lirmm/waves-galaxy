@@ -8,3 +8,4 @@ logs/
 !logs/.gitkeep
 src/tests/settings.ini
 .directory
+/src/waves_galaxy_adaptors.egg-info/

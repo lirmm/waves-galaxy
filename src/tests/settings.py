@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-import waves_adaptors
+import waves_addons
 
 import ConfigParser
 from os.path import join, dirname

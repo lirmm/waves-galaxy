@@ -11,14 +11,14 @@ class GalaxyWorkFlowAdaptor(GalaxyJobAdaptor):
     .. WARNING::
         This class is not fully implemented at the moment !
 
-    As it inherit from :class:`waves_adaptors.GalaxyJobAdaptor`, its init paramas are the same.
+    As it inherit from :class:`waves_addons.GalaxyJobAdaptor`, its init paramas are the same.
 
     """
     name = 'Galaxy remote workflow adaptor (api_key)'
 
-    #: Dedicated import clazz for Galaxy workflows see :class:`waves_adaptors.importer.galaxy.GalaxyWorkFlowImporter`
+    #: Dedicated import clazz for Galaxy workflows see :class:`waves_addons.importer.galaxy.GalaxyWorkFlowImporter`
     # TODO create and manage corretly Workflow Imports
-    # importer_clazz = 'waves_adaptors.importers.galaxy.workflow.GalaxyWorkFlowImporter'
+    # importer_clazz = 'waves_addons.importers.galaxy.workflow.GalaxyWorkFlowImporter'
 
     def _run_job(self, job):
         """
