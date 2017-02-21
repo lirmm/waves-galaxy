@@ -75,8 +75,6 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
-            remote_user = self.connector.gi.users.get_current_user()
-            self._connected = (remote_user['username'] is not None and remote_user['deleted'] is False)
         except ConnectionError as exc:
             self._connected = False
             raise GalaxyAdaptorConnectionError(exc)
@@ -268,3 +266,13 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         if self._connected:
             dump += '(Connected)'
         return dump
+
+    def test_connection(self):
+        try:
+            self.connector = self.connect()
+            remote_user = self.connector.gi.users.get_current_user()
+            return remote_user['username'] is not None and remote_user['deleted'] is False
+        except ConnectionError as exc:
+            self._connected = False
+            raise GalaxyAdaptorConnectionError(exc)
+        return False
