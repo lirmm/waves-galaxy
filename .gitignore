@@ -1,11 +1,8 @@
 .idea
-src/waves_adaptors.egg-info/*
+.directory
 build/
 dist/
-jobs/*
-!jobs/.gitkeep
-logs/
-!logs/.gitkeep
+src/adaptors/tests/jobs
+!src/adaptors/tests/jobs.gitkeep
 src/tests/settings.ini
-.directory
-/src/waves_galaxy_adaptors.egg-info/
+src/waves_galaxy_adaptors.egg-info/
