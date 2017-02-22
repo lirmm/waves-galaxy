@@ -10,10 +10,10 @@ from bioblend.galaxy.objects import client
 import six
 from bioblend import ConnectionError
 
-from waves_addons.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
-from waves_adaptors.exceptions.importers import *
-from waves_adaptors.dto.services import *
-from waves_adaptors.core.base import AdaptorImporter
+from waves.adaptors.addons.galaxy.exception import GalaxyAdaptorConnectionError
+from waves.adaptors.exceptions.importers import *
+from waves.adaptors.dto.services import *
+from waves.adaptors.core.adaptor import AdaptorImporter
 
 logger = logging.getLogger(__name__)
 

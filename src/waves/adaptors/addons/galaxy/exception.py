@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import json
-from waves_adaptors.exceptions.adaptors import AdaptorConnectException
+from waves.adaptors.exceptions.adaptors import AdaptorConnectException
 
 
 class GalaxyAdaptorConnectionError(AdaptorConnectException):

@@ -11,7 +11,7 @@ class GalaxyWorkFlowAdaptor(GalaxyJobAdaptor):
     .. WARNING::
         This class is not fully implemented at the moment !
 
-    As it inherit from :class:`waves_addons.GalaxyJobAdaptor`, its init paramas are the same.
+    As it inherit from :class:`waves.addons.GalaxyJobAdaptor`, its init paramas are the same.
 
     """
     name = 'Galaxy remote workflow adaptor (api_key)'

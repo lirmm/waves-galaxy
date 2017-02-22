@@ -9,11 +9,12 @@ import bioblend
 import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
-from waves_adaptors.core.api.base import RemoteApiAdaptor
-from waves_adaptors.core.base import JobRunDetails
 
 from exception import GalaxyAdaptorConnectionError
-from waves_adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
+import waves.adaptors.core
+from waves.adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
+
+from waves.adaptors.core.api import RemoteApiAdaptor
 
 logger = logging.getLogger(__name__)
 
@@ -42,18 +43,18 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
     def __init__(self, **kwargs):
         super(GalaxyJobAdaptor, self).__init__(**kwargs)
         self._states_map = dict(
-            new=self.JOB_QUEUED,
-            queued=self.JOB_QUEUED,
-            running=self.JOB_RUNNING,
-            waiting=self.JOB_RUNNING,
-            error=self.JOB_ERROR,
-            ok=self.JOB_COMPLETED
+            new=waves.adaptors.core.JOB_QUEUED,
+            queued=waves.adaptors.core.JOB_QUEUED,
+            running=waves.adaptors.core.JOB_RUNNING,
+            waiting=waves.adaptors.core.JOB_RUNNING,
+            error=waves.adaptors.core.JOB_ERROR,
+            ok=waves.adaptors.core.JOB_COMPLETED
         )
 
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves_addons.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves.addons.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -71,7 +72,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves_addons.galaxy.GalaxyAdaptorConnectionError`
+        :raise: `waves.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -120,7 +121,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
             job.message = exc.message
             raise exc
         except IOError as e:
-            raise AdaptorJobException(e, 'File upload error')
+            raise AdaptorJobException('File upload error %s' % e.message)
 
     def _run_job(self, job):
         """
@@ -132,7 +133,6 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
             history = self.connector.histories.get(id_=str(job.remote_history_id))
             logger.debug("First attempts %s ", history.state)
             if history.state == 'ok':
-                # logger.debug('Current history state %s', self.connector.histories.get_status(id_=str(job.remote_history_id)))
                 galaxy_tool = self.connector.tools.get(id_=self.tool_id)
                 if galaxy_tool and type(galaxy_tool) is not list:
                     logger.debug('Galaxy tool %s', galaxy_tool)
@@ -213,8 +213,6 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
                                                                          join(job.working_dir, job_output.file_path),
                                                                          use_default_filename=False)
                             logger.debug("Saving output to %s" % join(job.working_dir, job_output.file_path))
-                else:
-                    job.status = self._states_map[remote_job.state]
                 # GET stdout / stderr from Galaxy
                 with open(join(job.working_dir, job.stdout), 'a') as out, \
                         open(join(job.working_dir, job.stderr), 'a') as err:
@@ -230,6 +228,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
                     except KeyError:
                         logger.warning('No stderr from remote job')
                         pass
+            job.results_available = True
             return job
         except bioblend.galaxy.client.ConnectionError as e:
             job.results_available = False
