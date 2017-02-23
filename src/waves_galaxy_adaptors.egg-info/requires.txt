@@ -1,2 +1,0 @@
-waves-adaptors>=0.0.2
-bioblend>=0.8.0
