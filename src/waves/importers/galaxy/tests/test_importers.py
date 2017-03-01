@@ -5,10 +5,10 @@ import logging
 import unittest
 from os.path import join, dirname
 
-from waves.adaptors.addons.galaxy import GalaxyJobAdaptor
+import waves.addons.galaxy.tests.galaxy.utils as test_util
+from waves.addons.galaxy import GalaxyJobAdaptor
 
-import settings
-import waves.tests.galaxy.utils as test_util
+import waves.addons.galaxy.tests.settings
 from waves.adaptors.dto import JobInput, Job, JobOutput
 from waves.adaptors.tests.mocks import sample_file
 
@@ -20,9 +20,9 @@ working_dir = join(dirname(dirname(__file__)), 'jobs')
 @test_util.skip_unless_galaxy()
 class GalaxyRunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_URL,
-                                                     'port': settings.WAVES_TEST_GALAXY_PORT,
-                                                     'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyJobAdaptor(init_params={'host': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_URL,
+                                                     'port': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_PORT,
+                                                     'app_key': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_API_KEY})
         super(GalaxyRunnerTestCase, self).setUp()
 
     def test_import_galaxy_tools(self):

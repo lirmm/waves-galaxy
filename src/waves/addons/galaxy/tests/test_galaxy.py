@@ -10,8 +10,7 @@ import waves.settings
 import settings
 from waves.adaptors.dto.services import Service
 from waves.adaptors.exceptions.adaptors import AdaptorConnectException
-from waves.addons import GalaxyJobAdaptor
-from waves.addons import GalaxyWorkFlowAdaptor
+from waves.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
 
 logger = logging.getLogger(__name__)
 
