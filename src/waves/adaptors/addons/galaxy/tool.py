@@ -65,6 +65,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         :return: A dictionary containing expected init params
         :rtype: dict
         """
+        # FIXME change tool_id to "command" issued from base Adaptors !
         return dict(host=self.host,
                     port=self.port,
                     app_key=self.app_key,
