@@ -5,4 +5,4 @@ dist/
 src/adaptors/tests/jobs
 !src/adaptors/tests/jobs.gitkeep
 src/tests/settings.ini
-src/waves_galaxy_adaptors.egg-info/
+waves_galaxy_adaptors.egg-info/

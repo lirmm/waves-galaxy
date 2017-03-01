@@ -11,7 +11,7 @@ setup(
     name='waves-galaxy-adaptors',
     version='0.0.4',
     package_dir={'': 'src'},
-    packages=find_packages('src'),
+    packages=['waves', 'waves.addons', 'waves.addons.galaxy', 'waves.importers', 'waves.importers.galaxy'],
     url='https://github.com/lirmm/waves-galaxy-adaptors',
     license='GPLV3',
     author='Marc Chakiachvili',
