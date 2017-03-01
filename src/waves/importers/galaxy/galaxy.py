@@ -6,14 +6,14 @@ import os
 import tempfile
 
 import bioblend
-from bioblend.galaxy.objects import client
 import six
 from bioblend import ConnectionError
+from bioblend.galaxy.objects import client
 
-from waves.adaptors.addons.galaxy.exception import GalaxyAdaptorConnectionError
-from waves.adaptors.exceptions.importers import *
-from waves.adaptors.dto.services import *
 from waves.adaptors.core.adaptor import AdaptorImporter
+from waves.adaptors.dto.services import *
+from waves.adaptors.exceptions.importers import *
+from waves.addons.galaxy.exception import GalaxyAdaptorConnectionError
 
 logger = logging.getLogger(__name__)
 

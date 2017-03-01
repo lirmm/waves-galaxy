@@ -2,20 +2,23 @@
 from __future__ import unicode_literals
 
 import logging
+import unittest
+from os.path import join, dirname
 
-from waves.adaptors import working_dir, sample_file
-from waves.adaptors.core.api.galaxy import GalaxyJobAdaptor
-from waves.adaptors.importers.dto import Job, JobInput, JobOutput
+from waves.adaptors.addons.galaxy import GalaxyJobAdaptor
 
-import waves.tests.utils.galaxy_util as test_util
-from waves import tests as settings
-from waves.tests import TestBaseJobRunner
+import settings
+import waves.tests.galaxy.utils as test_util
+from waves.adaptors.dto import JobInput, Job, JobOutput
+from waves.adaptors.tests.mocks import sample_file
 
 logger = logging.getLogger(__name__)
 
+working_dir = join(dirname(dirname(__file__)), 'jobs')
+
 
 @test_util.skip_unless_galaxy()
-class GalaxyRunnerTestCase(TestBaseJobRunner):
+class GalaxyRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_URL,
                                                      'port': settings.WAVES_TEST_GALAXY_PORT,

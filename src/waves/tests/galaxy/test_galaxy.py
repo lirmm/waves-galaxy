@@ -4,24 +4,20 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-from django.conf import settings
-from waves.adaptors.exceptions.adaptors import AdaptorConnectException
-
 import utils.galaxy_util as test_util
 import waves.settings
-try:
-    __import__('addons.adaptors.api.galaxy')
-    from waves.addons import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
-except ImportError:
-    pass
-from waves.models import Service
-from waves.tests.test_runner import TestJobRunner
+
+import settings
+from waves.adaptors.dto.services import Service
+from waves.adaptors.exceptions.adaptors import AdaptorConnectException
+from waves.addons import GalaxyJobAdaptor
+from waves.addons import GalaxyWorkFlowAdaptor
 
 logger = logging.getLogger(__name__)
 
 
 @test_util.skip_unless_galaxy()
-class GalaxyRunnerTestCase(TestJobRunner):
+class GalaxyRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_URL,
                                                      'port': settings.WAVES_TEST_GALAXY_PORT,
@@ -74,7 +70,7 @@ class GalaxyRunnerTestCase(TestJobRunner):
 
 
 @test_util.skip_unless_galaxy()
-class GalaxyWorkFlowRunnerTestCase(TestJobRunner):
+class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': waves.settings.WAVES_TEST_GALAXY_URL,
                                                           'port': waves.settings.WAVES_TEST_GALAXY_PORT,
@@ -102,7 +98,7 @@ class GalaxyWorkFlowRunnerTestCase(TestJobRunner):
 
     @unittest.skip('WorkFlow not really available for now')
     def test_update_existing_workflow(self):
-        service = Service.objects.filter(runner__runner='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service(runner='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one
