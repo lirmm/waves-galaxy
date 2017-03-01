@@ -19,6 +19,7 @@ from waves.adaptors.core.api import RemoteApiAdaptor
 logger = logging.getLogger(__name__)
 
 __group__ = 'Galaxy'
+__all__ = ['GalaxyJobAdaptor']
 
 
 class GalaxyJobAdaptor(RemoteApiAdaptor):

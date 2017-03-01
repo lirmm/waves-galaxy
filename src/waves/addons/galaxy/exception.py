@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import json
 from waves.adaptors.exceptions.adaptors import AdaptorConnectException
 
+__all__ = ['GalaxyAdaptorConnectionError']
+
 
 class GalaxyAdaptorConnectionError(AdaptorConnectException):
     """

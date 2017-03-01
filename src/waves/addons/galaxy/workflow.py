@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from .tool import GalaxyJobAdaptor
 
 grp_name = "Galaxy"
+__all__ = ['GalaxyWorkFlowAdaptor']
 
 
 class GalaxyWorkFlowAdaptor(GalaxyJobAdaptor):
