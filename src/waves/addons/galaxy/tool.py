@@ -53,6 +53,10 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         )
 
     @property
+    def tool_id(self):
+        return self.command
+
+    @property
     def init_params(self):
         """
         Galaxy remote platform expected initialization parameters, defaults can be set in waves.addons.env
@@ -66,11 +70,11 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         :return: A dictionary containing expected init params
         :rtype: dict
         """
-        # FIXME change tool_id to "command" issued from base Adaptors !
-        return dict(host=self.host,
-                    port=self.port,
-                    app_key=self.app_key,
-                    tool_id=self.tool_id)
+        base_params = super(GalaxyJobAdaptor, self).init_params
+        base_params.update(dict(app_key=self.api_base_path,
+                                command=self.command,
+                                library_dir=self.library_dir))
+        return base_params
 
     def _connect(self):
         """ Create a bioblend galaxy object
@@ -277,3 +281,6 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
             self._connected = False
             raise GalaxyAdaptorConnectionError(exc)
         return False
+
+    def connexion_string(self):
+        return self.complete_url + '?api_key=' + self.app_key
