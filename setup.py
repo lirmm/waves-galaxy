@@ -21,7 +21,7 @@ setup(
     maintainer='LIRMM - MAB Laboratory - France',
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
-    namespace_packages=['waves', 'waves.addons', 'waves.importers'],
+    # namespace_packages=['waves', 'waves.addons', 'waves.importers'],
     install_requires=[
         'waves-adaptors>=0.0.2',
         'bioblend>=0.8.0'
