@@ -10,17 +10,20 @@ import unittest
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import *
 
+import settings
+
 NO_GALAXY_MESSAGE = "Externally configured Galaxy, but connection failed. %s"
 WRONG_GALAXY_KEY = "A Galaxy server is running, but provided api key is wrong."
-MISSING_SETTINGS = "Some settings are required to run Galaxy test : WAVES_TEST_GALAXY_URL, WAVES_TEST_GALAXY_PORT, " \
-                   "WAVES_TEST_GALAXY_API_KEY."
+MISSING_SETTINGS = "Some settings are required to run Galaxy test : WAVES_TEST_GALAXY_HOST, " \
+                   "WAVES_TEST_GALAXY_PROTOCOL, " \
+                   "WAVES_TEST_GALAXY_PORT, WAVES_TEST_GALAXY_API_KEY."
 MISSING_TOOL_MESSAGE = "Externally configured Galaxy instance requires tool %s to run test."
 
 
 def skip_unless_galaxy():
     try:
         galaxy_key = settings.WAVES_TEST_GALAXY_API_KEY
-        galaxy_url = settings.WAVES_TEST_GALAXY_URL
+        galaxy_url = '%s://%s' % (settings.WAVES_TEST_GALAXY_PROTOCOL, settings.WAVES_TEST_GALAXY_HOST)
         if settings.WAVES_TEST_GALAXY_PORT:
             galaxy_url += ':%s' % settings.WAVES_TEST_GALAXY_PORT
         gi_obj = GalaxyInstance(url=galaxy_url, api_key=galaxy_key)
@@ -37,7 +40,7 @@ def skip_unless_tool(tool_id):
     skip the test case if the tool is unavailable.
     """
     galaxy_key = settings.WAVES_TEST_GALAXY_API_KEY
-    galaxy_url = settings.WAVES_TEST_GALAXY_URL
+    galaxy_url = '%s://%s' % (settings.WAVES_TEST_GALAXY_PROTOCOL, settings.WAVES_TEST_GALAXY_HOST)
     if settings.WAVES_TEST_GALAXY_PORT:
         galaxy_url += ':%s' % settings.WAVES_TEST_GALAXY_PORT
     gi = GalaxyInstance(url=galaxy_url, api_key=galaxy_key)

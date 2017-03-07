@@ -10,11 +10,10 @@ import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
 
+import waves_adaptors.core
 from exception import GalaxyAdaptorConnectionError
-import waves.adaptors.core
-from waves.adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-
-from waves.adaptors.core.api import RemoteApiAdaptor
+from waves_adaptors.core.api import RemoteApiAdaptor
+from waves_adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
 
 logger = logging.getLogger(__name__)
 
@@ -44,12 +43,12 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
     def __init__(self, **kwargs):
         super(GalaxyJobAdaptor, self).__init__(**kwargs)
         self._states_map = dict(
-            new=waves.adaptors.core.JOB_QUEUED,
-            queued=waves.adaptors.core.JOB_QUEUED,
-            running=waves.adaptors.core.JOB_RUNNING,
-            waiting=waves.adaptors.core.JOB_RUNNING,
-            error=waves.adaptors.core.JOB_ERROR,
-            ok=waves.adaptors.core.JOB_COMPLETED
+            new=waves_adaptors.core.JOB_QUEUED,
+            queued=waves_adaptors.core.JOB_QUEUED,
+            running=waves_adaptors.core.JOB_RUNNING,
+            waiting=waves_adaptors.core.JOB_RUNNING,
+            error=waves_adaptors.core.JOB_ERROR,
+            ok=waves_adaptors.core.JOB_COMPLETED
         )
 
     @property
@@ -59,7 +58,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves.addons.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves_adaptors.addons.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -78,7 +77,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
+        :raise: `waves_adaptors.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -284,3 +283,8 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     def connexion_string(self):
         return self.complete_url + '?api_key=' + self.app_key
+
+    @property
+    def importer(self):
+        from waves_adaptors.addons.galaxy.importers.galaxy import GalaxyToolImporter
+        return GalaxyToolImporter(self)

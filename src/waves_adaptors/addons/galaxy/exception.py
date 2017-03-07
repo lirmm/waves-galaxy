@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 import json
-from waves.adaptors.exceptions.adaptors import AdaptorConnectException
+import bioblend
+from waves_adaptors.exceptions.adaptors import AdaptorConnectException
 
 __all__ = ['GalaxyAdaptorConnectionError']
 
@@ -23,7 +24,12 @@ class GalaxyAdaptorConnectionError(AdaptorConnectException):
 
         if getattr(e, 'body'):
             error_data = json.loads(e.body)
-        else:
-            error_data = json.loads(e)
+        elif isinstance(e, bioblend.ConnectionError):
+            error_data = dict(err_msg=e.message)
+        elif e is str:
+            try:
+                error_data = json.loads(e)
+            except ValueError:
+                error_data = dict(err_msg="%s" % e)
         message = '{}'.format(error_data['err_msg'])
         super(GalaxyAdaptorConnectionError, self).__init__(msg=message)

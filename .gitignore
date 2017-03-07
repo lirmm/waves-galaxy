@@ -2,6 +2,7 @@
 .directory
 build/
 dist/
+*settings.ini
 src/adaptors/tests/jobs
 !src/adaptors/tests/jobs.gitkeep
 src/tests/settings.ini

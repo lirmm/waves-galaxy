@@ -5,12 +5,11 @@ import logging
 import unittest
 from os.path import join, dirname
 
-import waves.addons.galaxy.tests.galaxy.utils as test_util
-from waves.addons.galaxy import GalaxyJobAdaptor
-
-import waves.addons.galaxy.tests.settings
-from waves.adaptors.dto import JobInput, Job, JobOutput
-from waves.adaptors.tests.mocks import sample_file
+import utils as test_util
+import waves_adaptors.tests.settings as settings
+from waves_adaptors.addons.galaxy import GalaxyJobAdaptor
+from waves_adaptors.dto import JobInput, Job, JobOutput
+from waves_adaptors.tests.mocks import sample_file
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +19,10 @@ working_dir = join(dirname(dirname(__file__)), 'jobs')
 @test_util.skip_unless_galaxy()
 class GalaxyRunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.adaptor = GalaxyJobAdaptor(init_params={'host': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_URL,
-                                                     'port': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_PORT,
-                                                     'app_key': waves.addons.galaxy.tests.settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
+                                                     'protocol': settings.WAVES_TEST_GALAXY_PROTOCOL,
+                                                     'port': settings.WAVES_TEST_GALAXY_PORT,
+                                                     'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
         super(GalaxyRunnerTestCase, self).setUp()
 
     def test_import_galaxy_tools(self):
@@ -85,9 +85,9 @@ class GalaxyRunnerTestCase(unittest.TestCase):
 @test_util.skip_unless_galaxy()
 class GalaxyWorkFlowRunnerTestCase(TestJobRunner):
     def setUp(self):
-        self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': waves.settings.WAVES_TEST_GALAXY_URL,
-                                                          'port': waves.settings.WAVES_TEST_GALAXY_PORT,
-                                                          'app_key': waves.settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': waves_adaptors.settings.WAVES_TEST_GALAXY_URL,
+                                                          'port': waves_adaptors.settings.WAVES_TEST_GALAXY_PORT,
+                                                          'app_key': waves_adaptors.settings.WAVES_TEST_GALAXY_API_KEY})
         super(GalaxyWorkFlowRunnerTestCase, self).setUp()
 
     @property
@@ -111,7 +111,7 @@ class GalaxyWorkFlowRunnerTestCase(TestJobRunner):
 
     @unittest.skip('WorkFlow not really available for now')
     def test_update_existing_workflow(self):
-        service = Service.objects.filter(run_on__clazz='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service.objects.filter(run_on__clazz='waves_adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one

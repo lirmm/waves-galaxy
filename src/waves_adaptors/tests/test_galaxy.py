@@ -4,13 +4,11 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-import utils.galaxy_util as test_util
-import waves.settings
-
 import settings
-from waves.adaptors.dto.services import Service
-from waves.adaptors.exceptions.adaptors import AdaptorConnectException
-from waves.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
+import waves_adaptors.tests.utils as test_util
+from waves_adaptors.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
+from waves_adaptors.dto.services import Service
+from waves_adaptors.exceptions.adaptors import AdaptorConnectException
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +16,8 @@ logger = logging.getLogger(__name__)
 @test_util.skip_unless_galaxy()
 class GalaxyRunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_URL,
+        self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
+                                                     'protocol': settings.WAVES_TEST_GALAXY_PROTOCOL,
                                                      'port': settings.WAVES_TEST_GALAXY_PORT,
                                                      'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
         super(GalaxyRunnerTestCase, self).setUp()
@@ -40,19 +39,20 @@ class GalaxyRunnerTestCase(unittest.TestCase):
         """
         tools = self.adaptor.importer.list_services()
         self.assertGreater(len(tools), 0)
+        for tool in tools:
+            logger.debug('Found tool : %s', tool)
 
     @test_util.skip_unless_tool("MAF_To_Fasta1")
     def test_import_tool(self):
-        service = self.adaptor.importer.import_remote_service("MAF_To_Fasta1", self.runner_model)
+        service = self.adaptor.importer.import_service("MAF_To_Fasta1")
 
         self.assertIsNotNone(service)
-        self.assertIsNotNone(service.submissions)
-        self.assertGreater(service.submissions.first().submission_inputs.count(), 0)
+        self.assertGreater(service.inputs, 0)
 
     @test_util.skip_unless_tool("toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
     def test_import_mafft(self):
-        service = self.adaptor.importer.import_remote_service(
-            "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1", self.runner_model)
+        service = self.adaptor.importer.import_service(
+            "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
         self.assertIsNotNone(service)
 
     def tearDown(self):
@@ -71,9 +71,9 @@ class GalaxyRunnerTestCase(unittest.TestCase):
 @test_util.skip_unless_galaxy()
 class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
     def setUp(self):
-        self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': waves.settings.WAVES_TEST_GALAXY_URL,
-                                                          'port': waves.settings.WAVES_TEST_GALAXY_PORT,
-                                                          'app_key': waves.settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
+                                                          'port': settings.WAVES_TEST_GALAXY_PORT,
+                                                          'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
         super(GalaxyWorkFlowRunnerTestCase, self).setUp()
 
     @property
@@ -97,7 +97,7 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @unittest.skip('WorkFlow not really available for now')
     def test_update_existing_workflow(self):
-        service = Service(runner='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service(runner='waves_adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one

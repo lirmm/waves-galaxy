@@ -10,10 +10,10 @@ import six
 from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
 
-from waves.adaptors.core.adaptor import AdaptorImporter
-from waves.adaptors.dto.services import *
-from waves.adaptors.exceptions.importers import *
-from waves.addons.galaxy.exception import GalaxyAdaptorConnectionError
+from waves_adaptors.core.adaptor import AdaptorImporter
+from waves_adaptors.dto.services import *
+from waves_adaptors.exceptions.importers import *
+from waves_adaptors.addons.galaxy.exception import GalaxyAdaptorConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -143,36 +143,41 @@ class GalaxyToolImporter(AdaptorImporter):
                     srv_input.edam_datas = ','.join(tool_input['edam']['edam_data'])
             return srv_input
         except UnmanagedInputTypeException as e:
+            logger.error(e)
             self.warn(e)
             return None
-        except KeyError:
+        except KeyError as e:
+            logger.error(e)
             self.warn(
                 UnManagedAttributeTypeException(
                     "%s:%s" % (tool_input['type'], tool_input['name'])))
             return None
-        except AttributeError:
+        except AttributeError as e:
+            logger.error(e)
             self.warn(
                 UnManagedAttributeException("%s:%s:%s" % (tool_input['type'], tool_input['name'], tool_input['label'])))
             return None
         except Exception as e:
+            logger.exception(e)
             self.error(Exception('UnexpectedError for input "%s" (%s)' % (tool_input['name'], e)))
             return None
 
     def _import_conditional_set(self, tool_input):
         conditional = self._import_param(tool_input.get('test_param'))
         logger.debug('Test param %s', tool_input['test_param'])
+        logger.debug('Imported conditional %s', conditional)
         for related in tool_input.get('cases', []):
             when_value = related.get('value')
             for when_input in related['inputs']:
                 # TODO manage subclasses
-                when_service_input = Input(label=when_input.get('label', when_input.get('name')),
-                                           name=when_input.get('name'),
-                                           default=when_input.get('value'),
-                                           description=when_input.get('help'),
-                                           short_description=when_input.get('help'),
-                                           type=self.map_type(when_input.get('type')),
-                                           mandatory=False,
-                                           when_value=when_value)
+                when_service_input = RelatedInput(label=when_input.get('label', when_input.get('name')),
+                                                  name=when_input.get('name'),
+                                                  default=when_input.get('value'),
+                                                  description=when_input.get('help'),
+                                                  short_description=when_input.get('help'),
+                                                  type=self.map_type(when_input.get('type')),
+                                                  mandatory=False,
+                                                  when_value=when_value)
                 when_input_type = when_input.get('type')
                 try:
                     if when_input_type == 'conditional':
@@ -180,9 +185,9 @@ class GalaxyToolImporter(AdaptorImporter):
                             UnmanagedInputTypeException(
                                 "Unmanaged nested conditional inputs %s " % when_input.get('name')))
                         raise RuntimeWarning
-
+                    logger.debug("Input type %s", when_input.get('type', 'text'))
                     _import_func = getattr(self, '_import_' + when_input.get('type', 'text'))
-                    logger.debug('import func _import_%s ', _import_func.__name__)
+                    logger.debug('import func %s ', _import_func.__name__)
                     _import_func(when_input, when_service_input)
                 except AttributeError as e:
                     self.error(Exception('UnexpectedError for input "%s" (%s)' % (when_input.get('name'), e)))
