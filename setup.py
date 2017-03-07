@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     # namespace_packages=['waves_adaptors', 'waves_adaptors.addons', 'waves_adaptors.importers'],
     install_requires=[
-        'waves_adaptors-core>=0.0.2',
+        'waves_adaptors-core>=0.0.5',
         'bioblend>=0.8.0'
     ],
     classifiers=[
