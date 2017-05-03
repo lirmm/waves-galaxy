@@ -71,6 +71,7 @@ class GalaxyRunnerTestCase(unittest.TestCase):
 
 @test_util.skip_unless_galaxy()
 class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
+
     def setUp(self):
         self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
                                                           'port': settings.WAVES_TEST_GALAXY_PORT,
@@ -79,12 +80,14 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @property
     def importer(self):
-        return self.adaptor.importer(for_runner=self.runner_model)
+        return self.adaptor.importer
 
     def test_list_galaxy_workflow(self):
         services = self.importer.list_services()
         if len(services) > 0:
             self.assertGreaterEqual(len(services), 0)
+            for serv in services:
+                logger.debug('Service %s is retrieved', serv)
         else:
             self.skipTest("No remote workflows ")
 
