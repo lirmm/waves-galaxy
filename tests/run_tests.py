@@ -4,11 +4,12 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
+from waves.adaptors.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
+from waves.adaptors.dto import Service
+from waves.adaptors.exceptions.adaptors import AdaptorConnectException
+
 import settings
-import waves_adaptors.tests.utils as test_util
-from waves_adaptors.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
-from waves_adaptors.dto.services import Service
-from waves_adaptors.exceptions.adaptors import AdaptorConnectException
+import utils as test_util
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @unittest.skip('WorkFlow not really available for now')
     def test_update_existing_workflow(self):
-        service = Service(runner='waves_adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service(runner='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one
