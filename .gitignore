@@ -2,8 +2,9 @@
 .directory
 build/
 dist/
-*settings.ini
+waves_galaxy/settings.ini
 src/adaptors/tests/jobs
 !src/adaptors/tests/jobs.gitkeep
 src/tests/settings.ini
 waves_galaxy_adaptors.egg-info/
+/galaxy/tests/settings.ini

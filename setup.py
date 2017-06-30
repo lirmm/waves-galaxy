@@ -4,16 +4,19 @@ import os
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
 
+with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as version:
+    VERSION = version.readline()
+
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 setup(
-    name='waves-galaxy-adaptors',
-    version='0.0.4',
+    name='galaxy-galaxy-adaptors',
+    version=VERSION,
     package_dir={'': 'src'},
     packages=find_packages('src'),
-    url='https://github.com/lirmm/waves.adaptors-galaxy-adaptors',
-    license='GPLV3',
+    url='https://github.com/lirmm/galaxy.adaptors-galaxy-adaptors',
+    license='GPLv3',
     author='Marc Chakiachvili',
     author_email='marc.chakiachvili@lirmm.fr',
     description='WAVES adaptor to interact with Galaxy remote platform',
@@ -21,9 +24,9 @@ setup(
     maintainer='LIRMM - MAB Laboratory - France',
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
-    # namespace_packages=['waves.adaptors', 'waves.adaptors.addons', 'waves.adaptors.importers'],
+    # namespace_packages=['galaxy', 'galaxy.adaptors', 'galaxy.adaptors.addons'],
     install_requires=[
-        'waves-adaptors>=0.0.5',
+        'galaxy-adaptors>=0.1.0',
         'bioblend>=0.8.0'
     ],
     classifiers=[

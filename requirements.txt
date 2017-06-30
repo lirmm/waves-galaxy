@@ -1,2 +1,3 @@
+django
 bioblend==0.8.0
 waves-adaptors>=0.0.1

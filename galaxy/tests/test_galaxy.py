@@ -4,23 +4,28 @@ from __future__ import unicode_literals
 import logging
 import unittest
 
-from waves.adaptors.addons.galaxy import GalaxyJobAdaptor, GalaxyWorkFlowAdaptor
-from waves.adaptors.dto import Service
-from waves.adaptors.exceptions.adaptors import AdaptorConnectException
+from django.test import TestCase
 
-import settings
+from waves.adaptors.exceptions import AdaptorConnectException
+from waves.models.services import Service
+
+from galaxy.tests import test_settings
 import utils as test_util
+from galaxy.adaptors.tool import GalaxyJobAdaptor
+from galaxy.adaptors.workflow import GalaxyWorkFlowAdaptor
+
 
 logger = logging.getLogger(__name__)
 
 
 @test_util.skip_unless_galaxy()
-class GalaxyRunnerTestCase(unittest.TestCase):
+class GalaxyRunnerTestCase(TestCase):
     def setUp(self):
-        self.adaptor = GalaxyJobAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
-                                                     'protocol': settings.WAVES_TEST_GALAXY_PROTOCOL,
-                                                     'port': settings.WAVES_TEST_GALAXY_PORT,
-                                                     'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyJobAdaptor(host=test_settings.WAVES_TEST_GALAXY_HOST,
+                                        protocol=test_settings.WAVES_TEST_GALAXY_PROTOCOL,
+                                        port=test_settings.WAVES_TEST_GALAXY_PORT,
+                                        app_key=test_settings.WAVES_TEST_GALAXY_API_KEY,
+                                        tool_id="Test")
         super(GalaxyRunnerTestCase, self).setUp()
         # ShortCut for adaptor GI
         try:
@@ -40,8 +45,9 @@ class GalaxyRunnerTestCase(unittest.TestCase):
         """
         tools = self.adaptor.importer.list_services()
         self.assertGreater(len(tools), 0)
+        print tools
         for tool in tools:
-            logger.debug('Found tool : %s', tool)
+            logger.info('Found tool : %s', tool)
 
     @test_util.skip_unless_tool("MAF_To_Fasta1")
     def test_import_tool(self):
@@ -63,7 +69,7 @@ class GalaxyRunnerTestCase(unittest.TestCase):
             None
         """
         super(GalaxyRunnerTestCase, self).tearDown()
-        if not settings.WAVES_DEBUG_GALAXY:
+        if not test_settings.WAVES_DEBUG_GALAXY:
             for history in self.gi.histories.list():
                 logger.debug('Deleting history %s:%s ', history.name, history.id)
                 self.gi.histories.delete(history.id, purge=self.gi.gi.config.get_config()['allow_user_dataset_purge'])
@@ -71,11 +77,10 @@ class GalaxyRunnerTestCase(unittest.TestCase):
 
 @test_util.skip_unless_galaxy()
 class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
-
     def setUp(self):
-        self.adaptor = GalaxyWorkFlowAdaptor(init_params={'host': settings.WAVES_TEST_GALAXY_HOST,
-                                                          'port': settings.WAVES_TEST_GALAXY_PORT,
-                                                          'app_key': settings.WAVES_TEST_GALAXY_API_KEY})
+        self.adaptor = GalaxyWorkFlowAdaptor(host=test_settings.WAVES_TEST_GALAXY_HOST,
+                                             port=test_settings.WAVES_TEST_GALAXY_PORT,
+                                             app_key=test_settings.WAVES_TEST_GALAXY_API_KEY)
         super(GalaxyWorkFlowRunnerTestCase, self).setUp()
 
     @property
@@ -101,7 +106,7 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @unittest.skip('WorkFlow not really available for now')
     def test_update_existing_workflow(self):
-        service = Service(runner='waves.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service(runner='galaxy.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one

@@ -7,10 +7,11 @@ from os.path import join
 
 import bioblend
 import requests
-import waves.adaptors.core
+import waves.adaptors.const
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
-from waves.adaptors.core.api import RemoteApiAdaptor
+from waves.authentication.key import WavesApiKeyAuthentication
+from waves.adaptors.core.api import ApiKeyAdaptor
 from waves.adaptors.exceptions.adaptors import AdaptorJobException, AdaptorExecException, AdaptorConnectException
 
 from exception import GalaxyAdaptorConnectionError
@@ -21,7 +22,7 @@ __group__ = 'Galaxy'
 __all__ = ['GalaxyJobAdaptor']
 
 
-class GalaxyJobAdaptor(RemoteApiAdaptor):
+class GalaxyJobAdaptor(ApiKeyAdaptor):
     """This is Galaxy bioblend api WAVES adaptors, maps call to Galaxy API to expected behaviour from base class
     Expected parameters to init call (dictionary):
     **Init parameters:**
@@ -31,29 +32,17 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         :param library_dir: remote library dir, where to place files in order to create galaxy histories
 
     """
+    authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
 
-    #: Galaxy remote server app_key
-    app_key = None
-    #: Optional library dir (for the future :-p)
-    library_dir = ""
-    #: Remote tool id on Galaxy
-    tool_id = None
+    def __init__(self, command=None, protocol='http', host="localhost", port='', api_base_path='', api_endpoint='',
+                 app_key=None, tool_id=None, library_dir="", **kwargs):
+        super(GalaxyJobAdaptor, self).__init__(command, protocol, host, port, api_base_path, api_endpoint,
+                                               app_key, **kwargs)
 
-    def __init__(self, **kwargs):
-        super(GalaxyJobAdaptor, self).__init__(**kwargs)
-        self._states_map = dict(
-            new=waves.adaptors.core.JOB_QUEUED,
-            queued=waves.adaptors.core.JOB_QUEUED,
-            running=waves.adaptors.core.JOB_RUNNING,
-            waiting=waves.adaptors.core.JOB_RUNNING,
-            error=waves.adaptors.core.JOB_ERROR,
-            ok=waves.adaptors.core.JOB_COMPLETED
-        )
-
-    @property
-    def tool_id(self):
-        return self.command
+        self.app_key = app_key
+        self.command = tool_id
+        self.library_dir = library_dir
 
     @property
     def init_params(self):
@@ -256,7 +245,7 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
+        details = waves.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
                                 started,
                                 finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
@@ -286,5 +275,5 @@ class GalaxyJobAdaptor(RemoteApiAdaptor):
 
     @property
     def importer(self):
-        from waves.adaptors.addons.galaxy.importers.galaxy import GalaxyToolImporter
+        from galaxy.adaptors.importers import GalaxyToolImporter
         return GalaxyToolImporter(self)

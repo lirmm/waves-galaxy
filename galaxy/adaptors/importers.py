@@ -9,10 +9,12 @@ import bioblend
 import six
 from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
-from waves.adaptors.addons.galaxy.exception import GalaxyAdaptorConnectionError
-from waves.adaptors.core.adaptor import AdaptorImporter
-from waves.adaptors.dto import *
+from waves.adaptors.core.importer import AdaptorImporter
 from waves.adaptors.exceptions.importers import *
+from galaxy.adaptors.exception import *
+from waves.models import Service
+from waves.models.inputs import *
+from waves.models.submissions import *
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,25 @@ class GalaxyToolImporter(AdaptorImporter):
         genomebuild='list',
     )
 
+    _clazz_map = dict(
+        text=TextParam,
+        boolean=BooleanParam,
+        integer=IntegerParam,
+        float=DecimalParam,
+        data=FileInput,
+        select=ListParam,
+        conditional=ListParam,
+        data_collection=FileInput,
+        genomebuild=ListParam,
+    )
+
+    def get_clazz(self, type_param):
+        param_clazz = self._clazz_map.get(type_param, None)
+        if not param_clazz:
+            raise UnmanagedInputTypeException()
+        else:
+            return param_clazz
+
     def connect(self):
         """
         Connect to remote Galaxy Host
@@ -52,13 +73,13 @@ class GalaxyToolImporter(AdaptorImporter):
         try:
             details = self._tool_client.get(id_=tool_id, io_details=True, link_details=True)
             description = details.wrapped.get('description')
-            service = Service(name=details.name,
-                              description=description,
-                              short_description=description,
-                              edam_topics=','.join(details.wrapped.get('edam_topics')),
-                              edam_operations=','.join(details.wrapped.get('edam_operations')),
-                              remote_service_id=tool_id,
-                              version=details.version)
+            service = Service.objects.create(name=details.name,
+                                             description=description,
+                                             short_description=description,
+                                             edam_topics=','.join(details.wrapped.get('edam_topics')),
+                                             edam_operations=','.join(details.wrapped.get('edam_operations')),
+                                             remote_service_id=tool_id,
+                                             version=details.version)
 
             return service, details.wrapped.get('inputs'), details.wrapped.get('outputs'), []
         except ConnectionError as e:
@@ -104,7 +125,8 @@ class GalaxyToolImporter(AdaptorImporter):
                 service_input = self.import_service_params([sect_input for sect_input in cur_input.get('inputs')])
             elif tool_input_type == 'repeat':
                 repeat_group = self._import_repeat(cur_input)
-                # print "repeat Group ", repeat_group
+                cur_input.repeat_group = repeat_group
+                print "repeat Group ", repeat_group
                 service_input = self.import_service_params([rep_input for rep_input in cur_input.get('inputs')])
                 for srv_input in service_input:
                     # print "srv_input", srv_input
@@ -125,21 +147,20 @@ class GalaxyToolImporter(AdaptorImporter):
             if tool_input.get('is_dynamic', False):
                 raise UnmanagedInputTypeException(
                     'Dynamic field \'%s\':%s ' % (tool_input.get('name'), tool_input.get('label')))
-            # TODO manage subclasses
-            srv_input = Input(label=tool_input.get('label', tool_input.get('name', None)),
-                              name=tool_input.get('name'),
-                              default=tool_input.get('default', None),
-                              help_text=tool_input.get('help'),
-                              type=self.map_type(tool_input.get('type')),
-                              mandatory=tool_input.get('optional', False),
-                              )
+            srv_input = self.get_clazz(
+                tool_input.get('type', 'text'))(label=tool_input.get('label', tool_input.get('name', None)),
+                                                name=tool_input.get('name'),
+                                                default=tool_input.get('default', None),
+                                                help_text=tool_input.get('help'),
+                                                type=self.map_type(tool_input.get('type')),
+                                                required=tool_input.get('optional', False),
+                                                )
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
             logger.debug('import func _import_%s ', _import_func.__name__)
             _import_func(tool_input, srv_input)
-            if 'edam' in tool_input:
-                if 'edam_formats' in tool_input['edam']:
-                    srv_input.edam_formats = ','.join(tool_input['edam']['edam_formats'])
-                    srv_input.edam_datas = ','.join(tool_input['edam']['edam_data'])
+            if 'edam' in tool_input and 'edam_formats' in tool_input['edam']:
+                srv_input.edam_formats = ','.join(tool_input['edam']['edam_formats'])
+                srv_input.edam_datas = ','.join(tool_input['edam']['edam_data'])
             return srv_input
         except UnmanagedInputTypeException as e:
             logger.error(e)
@@ -169,14 +190,14 @@ class GalaxyToolImporter(AdaptorImporter):
             when_value = related.get('value')
             for when_input in related['inputs']:
                 # TODO manage subclasses
-                when_service_input = RelatedInput(label=when_input.get('label', when_input.get('name')),
-                                                  name=when_input.get('name'),
-                                                  default=when_input.get('value'),
-                                                  description=when_input.get('help'),
-                                                  short_description=when_input.get('help'),
-                                                  type=self.map_type(when_input.get('type')),
-                                                  mandatory=False,
-                                                  when_value=when_value)
+                self.get_clazz(
+                    when_input.get('type', 'text'))(label=when_input.get('label', when_input.get('name')),
+                                                    name=when_input.get('name'),
+                                                    default=when_input.get('value'),
+                                                    description=when_input.get('help'),
+                                                    short_description=when_input.get('help'),
+                                                    mandatory=False,
+                                                    when_value=when_value)
                 when_input_type = when_input.get('type')
                 try:
                     if when_input_type == 'conditional':
@@ -187,13 +208,13 @@ class GalaxyToolImporter(AdaptorImporter):
                     logger.debug("Input type %s", when_input.get('type', 'text'))
                     _import_func = getattr(self, '_import_' + when_input.get('type', 'text'))
                     logger.debug('import func %s ', _import_func.__name__)
-                    _import_func(when_input, when_service_input)
+                    _import_func(when_input, when_input)
                 except AttributeError as e:
                     self.error(Exception('UnexpectedError for input "%s" (%s)' % (when_input.get('name'), e)))
                 except RuntimeWarning:
                     pass
                 else:
-                    conditional.dependents.append(when_service_input)
+                    conditional.dependents_inputs.append(when_input)
         return conditional
 
     def _import_text(self, tool_input, service_input):
@@ -234,11 +255,11 @@ class GalaxyToolImporter(AdaptorImporter):
         service_input.format = self._formatter.format_list(options)
 
     def _import_repeat(self, tool_input, service_input=None):
-        return RepeatGroup(name=_get_input_value(tool_input, 'name'),
-                           title=_get_input_value(tool_input, 'title'),
-                           max_repeat=_get_input_value(tool_input, 'max'),
-                           min_repeat=_get_input_value(tool_input, 'min'),
-                           default=_get_input_value(tool_input, 'default'))
+        return RepeatedGroup.objects.create(name=_get_input_value(tool_input, 'name'),
+                                            title=_get_input_value(tool_input, 'title'),
+                                            max_repeat=_get_input_value(tool_input, 'max'),
+                                            min_repeat=_get_input_value(tool_input, 'min'),
+                                            default=_get_input_value(tool_input, 'default'))
 
     def _import_genomebuild(self, tool_input, service_input):
         return self._import_select(tool_input, service_input)
@@ -249,12 +270,10 @@ class GalaxyToolImporter(AdaptorImporter):
         index = 0
         for tool_output in outputs:
             logger.debug(tool_output.keys())
-            service_output = Output(name=tool_output.get('name'),
-                                    label=tool_output.get('label'),
-                                    ext=tool_output.get('format'),
-                                    edam_format=tool_output.get('edam_format'),
-                                    edam_data=tool_output.get('edam_data'),
-                                    help_text=tool_output.get('label'))
+            service_output = SubmissionOutput.objects.create(label=tool_output.get('label'),
+                                                             edam_format=tool_output.get('edam_format'),
+                                                             edam_data=tool_output.get('edam_data'),
+                                                             help_text=tool_output.get('label'))
 
             service_output.order = index
             if service_output.pattern.startswith('$'):
@@ -294,7 +313,7 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
             tool_list = self._tool_client.list()
             return [
                 (y.id, y.name) for y in tool_list if y.published is True
-                ]
+            ]
         except ConnectionError as e:
             raise GalaxyAdaptorConnectionError(e)
 
@@ -333,13 +352,15 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
         self.workflow = self._tool_client.get(id_=tool_id)
         self.workflow_full_description = self.workflow.export()
         # TODO refactor this to import values from workflow
-        return Service(name='new workflow', version='1.0', short_description="", wrapped=self.workflow.inputs['0'])
+        return Service.objects.create(name='new workflow',
+                                      version='1.0',
+                                      short_description="")
 
     def import_service_params(self, data):
         service_inputs = []
         for dat in six.iteritems(data):
             dic = dat[-1]
-            service_input = BaseInput(name=dic['label'],
+            service_input = TextParam(name=dic['label'],
                                       label=dic['label'],
                                       submission=self._service,
                                       default=dic['value'],

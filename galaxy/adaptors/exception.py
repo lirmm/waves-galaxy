@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import json
 import bioblend
-from waves.adaptors.exceptions.adaptors import AdaptorConnectException
+from waves.adaptors.exceptions import AdaptorConnectException
 
 __all__ = ['GalaxyAdaptorConnectionError']
 

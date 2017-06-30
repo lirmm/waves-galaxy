@@ -10,7 +10,7 @@ import unittest
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import *
 
-import settings
+from galaxy.tests import test_settings
 
 NO_GALAXY_MESSAGE = "Externally configured Galaxy, but connection failed. %s"
 WRONG_GALAXY_KEY = "A Galaxy server is running, but provided api key is wrong."
@@ -22,15 +22,16 @@ MISSING_TOOL_MESSAGE = "Externally configured Galaxy instance requires tool %s t
 
 def skip_unless_galaxy():
     try:
-        galaxy_key = settings.WAVES_TEST_GALAXY_API_KEY
-        galaxy_url = '%s://%s' % (settings.WAVES_TEST_GALAXY_PROTOCOL, settings.WAVES_TEST_GALAXY_HOST)
-        if settings.WAVES_TEST_GALAXY_PORT:
-            galaxy_url += ':%s' % settings.WAVES_TEST_GALAXY_PORT
-        gi_obj = GalaxyInstance(url=galaxy_url, api_key=galaxy_key)
+        galaxy_key = test_settings.WAVES_TEST_GALAXY_API_KEY
+        galaxy_url = '%s://%s' % (test_settings.WAVES_TEST_GALAXY_PROTOCOL, test_settings.WAVES_TEST_GALAXY_HOST)
+        if test_settings.WAVES_TEST_GALAXY_PORT:
+            galaxy_url += ':%s' % test_settings.WAVES_TEST_GALAXY_PORT
+        gi_obj = GalaxyInstance(url=str(galaxy_url), api_key=galaxy_key)
         gi_obj.gi.users.get_current_user()
     except ConnectionError as e:
         return unittest.skip(NO_GALAXY_MESSAGE % e + ' [' + galaxy_url + '][' + galaxy_key + ']')
     except AttributeError as e:
+        print e.message
         return unittest.skip(MISSING_SETTINGS)
     return lambda f: f
 
@@ -39,11 +40,11 @@ def skip_unless_tool(tool_id):
     """ Decorate a Galaxy test method as requiring a specific tool,
     skip the test case if the tool is unavailable.
     """
-    galaxy_key = settings.WAVES_TEST_GALAXY_API_KEY
-    galaxy_url = '%s://%s' % (settings.WAVES_TEST_GALAXY_PROTOCOL, settings.WAVES_TEST_GALAXY_HOST)
-    if settings.WAVES_TEST_GALAXY_PORT:
-        galaxy_url += ':%s' % settings.WAVES_TEST_GALAXY_PORT
-    gi = GalaxyInstance(url=galaxy_url, api_key=galaxy_key)
+    galaxy_key = test_settings.WAVES_TEST_GALAXY_API_KEY
+    galaxy_url = '%s://%s' % (test_settings.WAVES_TEST_GALAXY_PROTOCOL, test_settings.WAVES_TEST_GALAXY_HOST)
+    if test_settings.WAVES_TEST_GALAXY_PORT:
+        galaxy_url += ':%s' % test_settings.WAVES_TEST_GALAXY_PORT
+    gi = GalaxyInstance(url=str(galaxy_url), api_key=galaxy_key)
 
     def method_wrapper(method):
         def wrapped_method(has_gi, *args, **kwargs):
