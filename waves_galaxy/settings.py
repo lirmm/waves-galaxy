@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 from __future__ import unicode_literals
 
 import os
+import ConfigParser
 import logging.config
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -36,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'waves',
-    'galaxy'
+    'galaxy.waves_adaptors'
 ]
 
 MIDDLEWARE = [
@@ -91,7 +92,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '[%(levelname)s][%(asctime)s][%(pathname)s:line %(lineno)s][%(name)s.%(funcName)s] - %(message)s',
+            'format': '[%(levelname)s][%(asctime)s][line %(lineno)s][%(name)s.%(funcName)s] - %(message)s',
             'datefmt': "%H:%M:%S"
         },
         'simple': {
@@ -126,3 +127,13 @@ LOGGING = {
     }
 }
 logging.config.dictConfig(LOGGING)
+configFile = os.path.join(os.path.dirname(__file__), 'settings.ini')
+Config = ConfigParser.SafeConfigParser(
+    dict(WAVES_TEST_GALAXY_PORT='')
+)
+Config.read(configFile)
+WAVES_TEST_GALAXY_API_KEY = Config.get('galaxy', 'WAVES_TEST_GALAXY_API_KEY')
+WAVES_TEST_GALAXY_HOST = Config.get('galaxy', 'WAVES_TEST_GALAXY_HOST')
+WAVES_TEST_GALAXY_PROTOCOL = Config.get('galaxy', 'WAVES_TEST_GALAXY_PROTOCOL')
+WAVES_TEST_GALAXY_PORT = Config.get('galaxy', 'WAVES_TEST_GALAXY_PORT')
+WAVES_DEBUG_GALAXY = True
