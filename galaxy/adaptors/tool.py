@@ -9,6 +9,7 @@ import bioblend
 import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
+import waves.adaptors.const
 from waves.adaptors.core.api import ApiKeyAdaptor
 from waves.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
 from waves.authentication.key import WavesApiKeyAuthentication
@@ -244,7 +245,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves_adaptors.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
+        details = waves.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
                                                               started,
                                                               finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
@@ -274,5 +275,5 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
 
     @property
     def importer(self):
-        from galaxy.waves_adaptors.importers import GalaxyToolImporter
+        from galaxy.adaptors.importers import GalaxyToolImporter
         return GalaxyToolImporter(self)

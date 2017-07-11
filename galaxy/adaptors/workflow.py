@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from galaxy.waves_adaptors.tool import GalaxyJobAdaptor
+from galaxy.adaptors.tool import GalaxyJobAdaptor
 
 grp_name = "Galaxy"
 __all__ = ['GalaxyWorkFlowAdaptor']

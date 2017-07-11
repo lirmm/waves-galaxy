@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'waves',
-    'galaxy.waves_adaptors'
+    'galaxy.adaptors'
 ]
 
 MIDDLEWARE = [

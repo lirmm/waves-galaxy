@@ -24,10 +24,9 @@ setup(
     maintainer='LIRMM - MAB Laboratory - France',
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
-    # namespace_packages=['galaxy', 'galaxy.adaptors', 'galaxy.adaptors.addons'],
     install_requires=[
-        'galaxy-adaptors>=0.1.0',
-        'bioblend>=0.8.0'
+        'bioblend>=0.8.0',
+        'waves-core>=1.1.1'
     ],
     classifiers=[
         'Environment :: Web Environment',

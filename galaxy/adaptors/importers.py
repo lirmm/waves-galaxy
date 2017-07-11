@@ -11,12 +11,13 @@ from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
 from waves.adaptors.core.importer import AdaptorImporter
 from waves.adaptors.exceptions import *
-from waves.models import Service
+from waves.models import get_service_model
 from waves.models.inputs import *
 from waves.models.submissions import *
-from galaxy.waves_adaptors.exception import GalaxyAdaptorConnectionError
+from galaxy.adaptors.exception import GalaxyAdaptorConnectionError
 
 logger = logging.getLogger(__name__)
+Service = get_service_model()
 
 
 def _get_input_value(tool_input, field, default=''):
@@ -87,7 +88,7 @@ class GalaxyToolImporter(AdaptorImporter):
             return details.wrapped.get('inputs'), details.wrapped.get('outputs'), []
         except ConnectionError as e:
             self.error(GalaxyAdaptorConnectionError(e))
-            return None, None, None, None
+            return None, None, None
 
     def _list_services(self):
         """
