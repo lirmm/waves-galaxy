@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from galaxy.adaptors.tool import GalaxyJobAdaptor
+from waves.galaxy.adaptors.tool import GalaxyJobAdaptor
 
 grp_name = "Galaxy"
 __all__ = ['GalaxyWorkFlowAdaptor']
@@ -12,7 +12,7 @@ class GalaxyWorkFlowAdaptor(GalaxyJobAdaptor):
     .. WARNING::
         This class is not fully implemented at the moment !
 
-    As it inherit from :class:`galaxy.adaptors.addons.GalaxyJobAdaptor`, its init paramas are the same.
+    As it inherit from :class:`waves.galaxy.adaptors.addons.GalaxyJobAdaptor`, its init paramas are the same.
 
     """
     name = 'Galaxy remote workflow adaptor (api_key)'

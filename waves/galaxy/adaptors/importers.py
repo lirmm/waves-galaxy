@@ -9,15 +9,14 @@ import bioblend
 import six
 from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
-from waves.adaptors.core.importer import AdaptorImporter
-from waves.adaptors.exceptions import *
-from waves.models import get_service_model
-from waves.models.inputs import *
-from waves.models.submissions import *
-from galaxy.adaptors.exception import GalaxyAdaptorConnectionError
+
+from waves.core.adaptors.importer import AdaptorImporter
+from waves.core.models import Service, SubmissionOutput, Submission
+from waves.core.adaptors.exceptions import *
+from waves.core.models.inputs import *
+from waves.galaxy.adaptors.exception import GalaxyAdaptorConnectionError
 
 logger = logging.getLogger(__name__)
-Service = get_service_model()
 
 
 def _get_input_value(tool_input, field, default=''):

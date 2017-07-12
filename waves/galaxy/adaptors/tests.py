@@ -4,20 +4,21 @@ from __future__ import unicode_literals
 import logging
 import unittest
 from os.path import dirname, join
+
 from django.conf import settings
 from django.test import TestCase
-from waves.adaptors.exceptions import AdaptorConnectException
-from waves.models import Service, Job, JobInput, JobOutput, AParam
-from waves.tests.utils import TestJobWorkflowMixin
 
-import galaxy.adaptors.utils as test_util
-from galaxy.adaptors.tool import GalaxyJobAdaptor
-from galaxy.adaptors.workflow import GalaxyWorkFlowAdaptor
+from waves.core.adaptors.exceptions import AdaptorConnectException
+from waves.core.models import Service, Job, JobInput, JobOutput, AParam
+from waves.core.tests.utils import TestJobWorkflowMixin
+from waves.galaxy.adaptors.tool import GalaxyJobAdaptor
+from waves.galaxy.adaptors.workflow import GalaxyWorkFlowAdaptor
+from waves.galaxy.adaptors.utils import skip_unless_galaxy, skip_unless_tool
 
 logger = logging.getLogger(__name__)
 
 
-@test_util.skip_unless_galaxy()
+@skip_unless_galaxy()
 class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
     def setUp(self):
         self.adaptor = GalaxyJobAdaptor(host=settings.WAVES_TEST_GALAXY_HOST,
@@ -46,14 +47,14 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
         for tool in tools:
             logger.info('Found tool : %s', tool)
 
-    @test_util.skip_unless_tool("MAF_To_Fasta1")
+    @skip_unless_tool("MAF_To_Fasta1")
     def test_import_tool(self):
-        service = self.adaptor.importer.import_service("MAF_To_Fasta1")
+        service, submission = self.adaptor.importer.import_service("MAF_To_Fasta1")
 
         self.assertIsNotNone(service)
-        self.assertGreater(service.inputs, 0)
+        self.assertGreater(submission.inputs.count(), 0)
 
-    @test_util.skip_unless_tool("toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
+    @skip_unless_tool("toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
     def test_import_mafft(self):
 
         service, submission = self.adaptor.importer.import_service(
@@ -91,7 +92,7 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
                 self.gi.histories.delete(history.id, purge=self.gi.gi.config.get_config()['allow_user_dataset_purge'])
 
 
-@test_util.skip_unless_galaxy()
+@skip_unless_galaxy()
 class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.adaptor = GalaxyWorkFlowAdaptor(host=settings.WAVES_TEST_GALAXY_HOST,
@@ -124,7 +125,7 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @unittest.skip('WorkFlow not available')
     def test_update_existing_workflow(self):
-        service = Service(runner='galaxy.adaptors.core.waves_api.galaxy.GalaxyWorkFlowAdaptor')
+        service = Service(runner='waves.galaxy.adaptors.workflow.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one

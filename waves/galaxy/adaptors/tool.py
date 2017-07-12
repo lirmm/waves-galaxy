@@ -9,13 +9,13 @@ import bioblend
 import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
-import waves.adaptors.const
-from waves.adaptors.core.api import ApiKeyAdaptor
-from waves.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-from waves.authentication.key import WavesApiKeyAuthentication
-from waves.models.jobs import JobOutput
 
+import waves.core.adaptors.const
 from exception import GalaxyAdaptorConnectionError
+from waves.core.adaptors.api import ApiKeyAdaptor
+from waves.core.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
+from waves.core.authentication.key import WavesApiKeyAuthentication
+from waves.core.models import JobOutput
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,12 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
     _states_map = dict(
-        new=waves.adaptors.const.JOB_QUEUED,
-        queued=waves.adaptors.const.JOB_QUEUED,
-        running=waves.adaptors.const.JOB_RUNNING,
-        waiting=waves.adaptors.const.JOB_RUNNING,
-        error=waves.adaptors.const.JOB_ERROR,
-        ok=waves.adaptors.const.JOB_COMPLETED
+        new=waves.core.adaptors.const.JOB_QUEUED,
+        queued=waves.core.adaptors.const.JOB_QUEUED,
+        running=waves.core.adaptors.const.JOB_RUNNING,
+        waiting=waves.core.adaptors.const.JOB_RUNNING,
+        error=waves.core.adaptors.const.JOB_ERROR,
+        ok=waves.core.adaptors.const.JOB_COMPLETED
     )
 
     def __init__(self, command=None, protocol='http', host="localhost", port='', api_base_path='', api_endpoint='',
@@ -54,7 +54,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves.adaptors.addons.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves.core.adaptors.addons.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -71,7 +71,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves.adaptors.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
+        :raise: `waves.core.adaptors.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -165,7 +165,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                             logger.info('Searched in %s', (x.name for x in job.outputs.all()))
                             job.outputs.add(JobOutput.objects.create(_name=remote_output,
                                                                      job=job,
-                                                                     remote_output_id= output_data['id']))
+                                                                     remote_output_id=output_data['id']))
                     for data_set in output_data_sets:
                         logger.debug('Dataset Info %s', data_set)
                         job_output = next((x for x in job.outputs.all() if x.remote_output_id == data_set.id), None)
@@ -265,9 +265,10 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
-                                                     started,
-                                                     finished, extra)
+        details = waves.core.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
+                                                          created,
+                                                          started,
+                                                          finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']
@@ -289,5 +290,5 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
 
     @property
     def importer(self):
-        from galaxy.adaptors.importers import GalaxyToolImporter
+        from waves.galaxy.adaptors.importers import GalaxyToolImporter
         return GalaxyToolImporter(self)

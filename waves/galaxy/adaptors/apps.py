@@ -13,6 +13,6 @@ class GalaxyConfig(AppConfig):
     """
     WAVES main application AppConfig, add signals for waves_webapp
     """
-    name = "galaxy.adaptors"
+    name = "waves.galaxy.adaptors"
     verbose_name = 'WAVES Galaxy adaptors'
     path = dirname(__file__)

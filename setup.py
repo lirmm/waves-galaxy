@@ -11,11 +11,10 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 setup(
-    name='galaxy-galaxy-adaptors',
+    name='waves-galaxy-adaptors',
     version=VERSION,
-    package_dir={'': 'src'},
-    packages=find_packages('src'),
-    url='https://github.com/lirmm/galaxy.adaptors-galaxy-adaptors',
+    packages=find_packages(exclude=("waves_galaxy/*",)),
+    url='https://github.com/lirmm/waves-galaxy',
     license='GPLv3',
     author='Marc Chakiachvili',
     author_email='marc.chakiachvili@lirmm.fr',
