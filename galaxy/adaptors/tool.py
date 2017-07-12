@@ -13,6 +13,7 @@ import waves.adaptors.const
 from waves.adaptors.core.api import ApiKeyAdaptor
 from waves.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
 from waves.authentication.key import WavesApiKeyAuthentication
+from waves.models.jobs import JobOutput
 
 from exception import GalaxyAdaptorConnectionError
 
@@ -34,14 +35,20 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     """
     authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
+    _states_map = dict(
+        new=waves.adaptors.const.JOB_QUEUED,
+        queued=waves.adaptors.const.JOB_QUEUED,
+        running=waves.adaptors.const.JOB_RUNNING,
+        waiting=waves.adaptors.const.JOB_RUNNING,
+        error=waves.adaptors.const.JOB_ERROR,
+        ok=waves.adaptors.const.JOB_COMPLETED
+    )
 
     def __init__(self, command=None, protocol='http', host="localhost", port='', api_base_path='', api_endpoint='',
-                 app_key=None, tool_id=None, library_dir="", **kwargs):
+                 app_key=None, library_dir="", **kwargs):
         super(GalaxyJobAdaptor, self).__init__(command, protocol, host, port, api_base_path, api_endpoint,
                                                app_key, **kwargs)
 
-        self.app_key = app_key
-        self.command = tool_id
         self.library_dir = library_dir
 
     @property
@@ -59,9 +66,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         :rtype: dict
         """
         base_params = super(GalaxyJobAdaptor, self).init_params
-        base_params.update(dict(app_key=self.api_base_path,
-                                command=self.command,
-                                library_dir=self.library_dir))
+        base_params.update(dict(library_dir=self.library_dir))
         return base_params
 
     def _connect(self):
@@ -107,7 +112,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                 state_history = self.connector.histories.get(id_=str(job.remote_history_id))
             if state_history.state != 'ok':
                 raise AdaptorExecException('Maximum time reached to prepare job')
-            job.message = 'Job prepared with %i args ' % len(job.inputs)
+            job.message = 'Job prepared with %i args ' % job.job_inputs.count()
             logger.debug(u'History initialized [galaxy_history_id: %s]', job.slug)
             return job
         except bioblend.galaxy.client.ConnectionError as e:
@@ -127,7 +132,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
             history = self.connector.histories.get(id_=str(job.remote_history_id))
             logger.debug("First attempts %s ", history.state)
             if history.state == 'ok':
-                galaxy_tool = self.connector.tools.get(id_=self.tool_id)
+                galaxy_tool = self.connector.tools.get(id_=self.command)
                 if galaxy_tool and type(galaxy_tool) is not list:
                     logger.debug('Galaxy tool %s', galaxy_tool)
                     inputs = {}
@@ -150,25 +155,37 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                         logger.debug('Current output %s', remote_output)
                         logger.debug('Remote output details %s', output_data)
                         logger.debug('Remote output id %s', output_data['id'])
-                        job_output = next((x for x in job.outputs if x.name == remote_output), None)
+
+                        job_output = next((x for x in job.outputs.all() if x.name == remote_output), None)
                         if job_output is not None:
-                            job_output.remote_output_id = output_data['id']
+                            job_output.remote_output_id = str(output_data['id'])
+                            job_output.save()
                         else:
-                            logger.warn('Unable to retrieve concrete job output in job description')
+                            logger.warn('Unable to retrieve job output in job description ! [%s]', remote_output)
+                            logger.info('Searched in %s', (x.name for x in job.outputs.all()))
+                            job.outputs.add(JobOutput.objects.create(_name=remote_output,
+                                                                     job=job,
+                                                                     remote_output_id= output_data['id']))
                     for data_set in output_data_sets:
                         logger.debug('Dataset Info %s', data_set)
-                        job_output = next((x for x in job.outputs if x.remote_output_id == data_set.id), None)
+                        job_output = next((x for x in job.outputs.all() if x.remote_output_id == data_set.id), None)
                         if job_output is not None:
+                            logger.debug("Dataset updates job output %s with %s, %s",
+                                         job_output,
+                                         data_set.name,
+                                         data_set.file_ext
+                                         )
                             job_output.value = data_set.name
                             job_output.extension = data_set.file_ext
-                        logger.debug(u'Output value updated [%s - %s]' % (
-                            data_set.id, '.'.join([data_set.name, data_set.file_ext])))
+                            job_output.save()
+                            logger.debug(u'Output value updated [%s - %s]' % (
+                                data_set.id, '.'.join([data_set.name, data_set.file_ext])))
                     job.message = "Job queued"
                     return job
                 else:
-                    raise AdaptorExecException(None, 'Unable to retrieve associated tool %s' % self.tool_id)
+                    raise AdaptorExecException(None, 'Unable to retrieve associated tool %s' % self.command)
             else:
-                raise AdaptorExecException(None, 'History not ready %s' % self.tool_id)
+                raise AdaptorExecException(None, 'History not ready %s' % self.command)
         except requests.exceptions.RequestException as e:
             # TODO Manage specific Exception to be more precise
             job.message = 'Error in request for run %s ' % e.message
@@ -195,13 +212,14 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     def _job_results(self, job):
         try:
             remote_job = self.connector.jobs.get(job.remote_job_id, full_details=True)
+            logger.debug('Retrieve job results from Galaxy %s', job.remote_job_id)
             if remote_job:
                 job.exit_code = remote_job.wrapped['exit_code']
                 if remote_job.state == 'ok':
                     logger.debug('Job info %s', remote_job)
-                    for job_output in job.outputs:
-                        logger.debug("Retrieved data from output %s", job_output)
+                    for job_output in job.outputs.all():
                         if job_output.remote_output_id:
+                            logger.debug("Retrieved data from output %s:%s", job_output, job_output.remote_output_id)
                             self.connector.gi.histories.download_dataset(job.remote_job_id,
                                                                          job_output.remote_output_id,
                                                                          join(job.working_dir, job_output.file_path),
@@ -222,7 +240,9 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                     except KeyError:
                         logger.warning('No stderr from remote job')
                         pass
-            job.results_available = True
+                job.results_available = True
+            else:
+                logger.warning("Job not found %s ", job.remote_job_id)
             return job
         except bioblend.galaxy.client.ConnectionError as e:
             job.results_available = False
@@ -246,19 +266,13 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
         details = waves.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code, created,
-                                                              started,
-                                                              finished, extra)
+                                                     started,
+                                                     finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']
         # self.connector.histories.delete(name=str(job.slug), purge=bool(galaxy_allow_purge))
         return details
-
-    def _dump_config(self):
-        dump = "\nHost URL: %s " % self.complete_url
-        if self._connected:
-            dump += '(Connected)'
-        return dump
 
     def test_connection(self):
         try:

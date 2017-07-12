@@ -30,12 +30,11 @@ def skip_unless_galaxy():
     except ConnectionError as e:
         return unittest.skip(NO_GALAXY_MESSAGE % e + ' [' + galaxy_url + '][' + galaxy_key + ']')
     except AttributeError as e:
-        print e.message
         return unittest.skip(MISSING_SETTINGS)
     return lambda f: f
 
 
-def skip_unless_tool(tool_id):
+def skip_unless_tool(command):
     """ Decorate a Galaxy test method as requiring a specific tool,
     skip the test case if the tool is unavailable.
     """
@@ -51,8 +50,8 @@ def skip_unless_tool(tool_id):
             # In panels by default, so flatten out sections...
             tool_ids = [_.id for _ in tools]
             tool_names = [_.name for _ in tools]
-            if tool_id not in tool_ids and not tool_id not in tool_names:
-                raise unittest.SkipTest(MISSING_TOOL_MESSAGE % tool_id)
+            if command not in tool_ids and not command not in tool_names:
+                raise unittest.SkipTest(MISSING_TOOL_MESSAGE % command)
             return method(has_gi, *args, **kwargs)
 
         # Must preserve method name so nose can detect and report tests by

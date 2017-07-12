@@ -83,8 +83,11 @@ class GalaxyToolImporter(AdaptorImporter):
                                                    edam_operations=','.join(details.wrapped.get('edam_operations')),
                                                    remote_service_id=tool_id,
                                                    version=details.version)
-            self._submission = Submission.objects.create(name="Imported from Galaxy", api_name="galaxy",
-                                                         service=self._service)
+            self._submission = Submission.objects.create(name="Imported from Galaxy",
+                                                         api_name="galaxy",
+                                                         service=self._service,
+                                                         availability=Submission.AVAILABLE_BOTH)
+            self._service.submissions.add(self._submission)
             return details.wrapped.get('inputs'), details.wrapped.get('outputs'), []
         except ConnectionError as e:
             self.error(GalaxyAdaptorConnectionError(e))
@@ -130,7 +133,6 @@ class GalaxyToolImporter(AdaptorImporter):
             elif tool_input_type == 'repeat':
                 repeat_group = self._import_repeat(cur_input)
                 cur_input.repeat_group = repeat_group
-                print "repeat Group ", repeat_group
                 service_input = self.import_service_params([rep_input for rep_input in cur_input.get('inputs')])
                 for srv_input in service_input:
                     # print "srv_input", srv_input
@@ -153,14 +155,21 @@ class GalaxyToolImporter(AdaptorImporter):
                     'Dynamic field \'%s\':%s ' % (tool_input.get('name'), tool_input.get('label')))
 
             logger.debug(self.get_clazz(tool_input.get('type', 'text')))
+            logger.debug("tool_input values %s", tool_input)
+            logger.debug(type(tool_input.get('optional')))
+            if tool_input.get('hidden'):
+                required = None
+            else:
+                required = not tool_input.get('optional')
             srv_input = self.get_clazz(
-                tool_input.get('type', 'text'))(label=tool_input.get('label', tool_input.get('name', None)),
-                                                name=tool_input.get('name'),
-                                                default=tool_input.get('default', None),
-                                                help_text=tool_input.get('help'),
-                                                required=tool_input.get('optional', False),
-                                                submission=self._submission
-                                                )
+                tool_input.get('type', 'text')).objects.create(
+                label=tool_input.get('label', tool_input.get('name', None)),
+                name=tool_input.get('name'),
+                default=tool_input.get('default', None),
+                help_text=tool_input.get('help', ''),
+                required=required,
+                submission=self._submission
+            )
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
             logger.debug('import func %s ', _import_func.__name__)
             _import_func(tool_input, srv_input)
@@ -176,12 +185,13 @@ class GalaxyToolImporter(AdaptorImporter):
             logger.error(e)
             self.warn(
                 UnManagedAttributeTypeException(
-                    "%s:%s" % (tool_input['type'], tool_input['name'])))
+                    "Type:%s|Name:%s" % (tool_input.get('type', 'NA'), tool_input.get('name', 'NA'))))
             return None
         except AttributeError as e:
-            print e.message
             self.warn(
-                UnManagedAttributeException("%s:%s:%s" % (tool_input['type'], tool_input['name'], tool_input['label'])))
+                UnManagedAttributeException(
+                    "Type:%s|Name:%s|Label:%s" % (tool_input.get('type', 'NA'), tool_input.get('name', 'NA'),
+                                                  tool_input.get('label', 'NA'))))
             return None
         except Exception as e:
             logger.exception(e)
@@ -195,14 +205,15 @@ class GalaxyToolImporter(AdaptorImporter):
         for related in tool_input.get('cases', []):
             when_value = related.get('value')
             for when_input in related['inputs']:
-                # TODO manage subclasses
                 self.get_clazz(
-                    when_input.get('type', 'text'))(label=when_input.get('label', when_input.get('name')),
-                                                    name=when_input.get('name'),
-                                                    default=when_input.get('value'),
-                                                    help_text=when_input.get('help'),
-                                                    required=False,
-                                                    when_value=when_value)
+                    when_input.get('type', 'text')).objects.create(
+                    label=when_input.get('label', when_input.get('name')),
+                    name=when_input.get('name'),
+                    default=when_input.get('value'),
+                    help_text=when_input.get('help'),
+                    required=False,
+                    when_value=when_value,
+                    submission=self._submission)
                 when_input_type = when_input.get('type')
                 try:
                     if when_input_type == 'conditional':
@@ -250,11 +261,11 @@ class GalaxyToolImporter(AdaptorImporter):
         service_input.default = _get_input_value(tool_input, 'value')
         options = []
         for option in _get_input_value(tool_input, 'options'):
-            if option[1] == '':
+            if option[1].strip() == '':
                 option[1] = 'None'
-            options.append('|'.join([option[0], option[1]]))
+            options.append('%s' % ('|'.join([option[0], option[1]])))
         logger.debug('List options %s', options)
-        service_input.list_elements = "%s\n".join(options)
+        service_input.list_elements = "\n".join(options)
 
     def _import_repeat(self, tool_input, service_input=None):
         return RepeatedGroup.objects.create(name=_get_input_value(tool_input, 'name'),
@@ -275,10 +286,13 @@ class GalaxyToolImporter(AdaptorImporter):
             # logger.debug(tool_output.keys())
             logger.debug(tool_output.items())
             service_output = SubmissionOutput.objects.create(label=tool_output.get('label'),
+                                                             name=tool_output.get('name'),
+                                                             extension=tool_output.get('format'),
                                                              edam_format=tool_output.get('edam_format'),
                                                              edam_data=tool_output.get('edam_data'),
                                                              help_text=tool_output.get('label'),
-                                                             submission=self._submission)
+                                                             submission=self._submission,
+                                                             file_pattern="%s")
             if tool_output.get('name').startswith('$'):
                 logger.debug("Value is depending on other input %s", tool_output.get('value'))
                 pass

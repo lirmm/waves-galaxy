@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 
 import logging
 import unittest
-
+from os.path import dirname, join
 from django.conf import settings
 from django.test import TestCase
 from waves.adaptors.exceptions import AdaptorConnectException
-from waves.models.services import Service
+from waves.models import Service, Job, JobInput, JobOutput, AParam
+from waves.tests.utils import TestJobWorkflowMixin
 
 import galaxy.adaptors.utils as test_util
 from galaxy.adaptors.tool import GalaxyJobAdaptor
@@ -17,13 +18,12 @@ logger = logging.getLogger(__name__)
 
 
 @test_util.skip_unless_galaxy()
-class GalaxyRunnerTestCase(TestCase):
+class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
     def setUp(self):
         self.adaptor = GalaxyJobAdaptor(host=settings.WAVES_TEST_GALAXY_HOST,
                                         protocol=settings.WAVES_TEST_GALAXY_PROTOCOL,
                                         port=settings.WAVES_TEST_GALAXY_PORT,
-                                        app_key=settings.WAVES_TEST_GALAXY_API_KEY,
-                                        tool_id="Test")
+                                        app_key=settings.WAVES_TEST_GALAXY_API_KEY)
         super(GalaxyRunnerTestCase, self).setUp()
         # ShortCut for adaptor GI
         try:
@@ -55,9 +55,28 @@ class GalaxyRunnerTestCase(TestCase):
 
     @test_util.skip_unless_tool("toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
     def test_import_mafft(self):
-        service = self.adaptor.importer.import_service(
+
+        service, submission = self.adaptor.importer.import_service(
             "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
         self.assertIsNotNone(service)
+        # print "service init_params", service.runner.adaptor.init_params
+        # job.adaptor = service.adaptor
+        job = Job.objects.create(submission=submission)
+        self.assertEqual(job.outputs.count(), 2)
+        job.job_inputs.add(JobInput.objects.create(param_type=AParam.TYPE_FILE,
+                                                   value=join(dirname(__file__), 'fixtures', 'tests', 'mafft.fasta'),
+                                                   name="inputs",
+                                                   command_type=AParam.OPT_TYPE_SIMPLE,
+                                                   job=job))
+
+        for output in submission.outputs.all():
+            logger.debug("Adding expected output %s ", output.name)
+            job.outputs.add(JobOutput.objects.create(job=job,
+                                                     _name=output.label,
+                                                     value=output.name,
+                                                     extension=output.extension))
+        job.save()
+        self.run_job_workflow(job)
 
     def tearDown(self):
         """
@@ -76,9 +95,9 @@ class GalaxyRunnerTestCase(TestCase):
 class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
     def setUp(self):
         self.adaptor = GalaxyWorkFlowAdaptor(host=settings.WAVES_TEST_GALAXY_HOST,
+                                             protocol=settings.WAVES_TEST_GALAXY_PROTOCOL,
                                              port=settings.WAVES_TEST_GALAXY_PORT,
-                                             app_key=settings.WAVES_TEST_GALAXY_API_KEY,
-                                             tool_id="Test")
+                                             app_key=settings.WAVES_TEST_GALAXY_API_KEY)
         super(GalaxyWorkFlowRunnerTestCase, self).setUp()
 
     @property

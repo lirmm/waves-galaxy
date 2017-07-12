@@ -137,3 +137,9 @@ WAVES_TEST_GALAXY_HOST = Config.get('galaxy', 'WAVES_TEST_GALAXY_HOST')
 WAVES_TEST_GALAXY_PROTOCOL = Config.get('galaxy', 'WAVES_TEST_GALAXY_PROTOCOL')
 WAVES_TEST_GALAXY_PORT = Config.get('galaxy', 'WAVES_TEST_GALAXY_PORT')
 WAVES_DEBUG_GALAXY = True
+WAVES_CORE = {
+    'ADAPTORS_CLASSES': (
+        'galaxy.adaptors.tool.GalaxyJobAdaptor',
+        'galaxy.adaptors.workflow.GalaxyWorkFlowAdaptor',
+    ),
+}
