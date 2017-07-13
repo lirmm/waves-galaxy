@@ -36,7 +36,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'waves.core',
+    'waves.wcore',
     'waves.galaxy.adaptors'
 ]
 

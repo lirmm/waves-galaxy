@@ -10,12 +10,12 @@ import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
 
-import waves.core.adaptors.const
+import waves.wcore.adaptors.const
 from exception import GalaxyAdaptorConnectionError
-from waves.core.adaptors.api import ApiKeyAdaptor
-from waves.core.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-from waves.core.authentication.key import WavesApiKeyAuthentication
-from waves.core.models import JobOutput
+from waves.wcore.adaptors.api import ApiKeyAdaptor
+from waves.wcore.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
+from waves.wcore.authentication.key import WavesApiKeyAuthentication
+from waves.wcore.models import JobOutput
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +36,12 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
     _states_map = dict(
-        new=waves.core.adaptors.const.JOB_QUEUED,
-        queued=waves.core.adaptors.const.JOB_QUEUED,
-        running=waves.core.adaptors.const.JOB_RUNNING,
-        waiting=waves.core.adaptors.const.JOB_RUNNING,
-        error=waves.core.adaptors.const.JOB_ERROR,
-        ok=waves.core.adaptors.const.JOB_COMPLETED
+        new=waves.wcore.adaptors.const.JOB_QUEUED,
+        queued=waves.wcore.adaptors.const.JOB_QUEUED,
+        running=waves.wcore.adaptors.const.JOB_RUNNING,
+        waiting=waves.wcore.adaptors.const.JOB_RUNNING,
+        error=waves.wcore.adaptors.const.JOB_ERROR,
+        ok=waves.wcore.adaptors.const.JOB_COMPLETED
     )
 
     def __init__(self, command=None, protocol='http', host="localhost", port='', api_base_path='', api_endpoint='',
@@ -54,7 +54,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     @property
     def init_params(self):
         """
-        Galaxy remote platform expected initialization parameters, defaults can be set in waves.core.adaptors.addons.env
+        Galaxy remote platform expected initialization parameters, defaults can be set in waves.wcore.adaptors.addons.env
         - **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
@@ -71,7 +71,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
 
     def _connect(self):
         """ Create a bioblend galaxy object
-        :raise: `waves.core.adaptors.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
+        :raise: `waves.wcore.adaptors.addons.adaptors.galaxy.exception.GalaxyAdaptorConnectionError`
         """
         try:
             self.connector = GalaxyInstance(url=self.complete_url, api_key=self.app_key)
@@ -265,7 +265,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves.core.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
+        details = waves.wcore.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
                                                           created,
                                                           started,
                                                           finished, extra)

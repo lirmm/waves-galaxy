@@ -8,9 +8,9 @@ from os.path import dirname, join
 from django.conf import settings
 from django.test import TestCase
 
-from waves.core.adaptors.exceptions import AdaptorConnectException
-from waves.core.models import Service, Job, JobInput, JobOutput, AParam
-from waves.core.tests.utils import TestJobWorkflowMixin
+from waves.wcore.adaptors.exceptions import AdaptorConnectException
+from waves.wcore.models import Service, Job, JobInput, JobOutput, AParam
+from waves.wcore.tests.utils import TestJobWorkflowMixin
 from waves.galaxy.adaptors.tool import GalaxyJobAdaptor
 from waves.galaxy.adaptors.workflow import GalaxyWorkFlowAdaptor
 from waves.galaxy.adaptors.utils import skip_unless_galaxy, skip_unless_tool

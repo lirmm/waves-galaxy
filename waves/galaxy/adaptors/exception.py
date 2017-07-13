@@ -5,7 +5,7 @@ import json
 
 import bioblend
 
-from waves.core.adaptors.exceptions import AdaptorConnectException
+from waves.wcore.adaptors.exceptions import AdaptorConnectException
 
 __all__ = ['GalaxyAdaptorConnectionError']
 
