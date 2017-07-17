@@ -286,7 +286,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         return False
 
     def connexion_string(self):
-        return self.complete_url + '?api_key=' + self.app_key
+        return self.complete_url + '?api_key=' + str(self.app_key)
 
     @property
     def importer(self):
