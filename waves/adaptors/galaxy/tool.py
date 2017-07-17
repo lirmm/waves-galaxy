@@ -290,5 +290,5 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
 
     @property
     def importer(self):
-        from waves.galaxy.adaptors.importers import GalaxyToolImporter
+        from waves.adaptors.galaxy.importers import GalaxyToolImporter
         return GalaxyToolImporter(self)

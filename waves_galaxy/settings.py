@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'waves.wcore',
-    'waves.galaxy.adaptors'
+    'waves.adaptors.galaxy'
 ]
 
 MIDDLEWARE = [
@@ -139,7 +139,7 @@ WAVES_TEST_GALAXY_PORT = Config.get('galaxy', 'WAVES_TEST_GALAXY_PORT')
 WAVES_DEBUG_GALAXY = True
 WAVES_CORE = {
     'ADAPTORS_CLASSES': (
-        'waves.galaxy.adaptors.tool.GalaxyJobAdaptor',
-        'waves.galaxy.adaptors.workflow.GalaxyWorkFlowAdaptor',
+        'waves.adaptors.galaxy.tool.GalaxyJobAdaptor',
+        'waves.adaptors.galaxy.workflow.GalaxyWorkFlowAdaptor',
     ),
 }

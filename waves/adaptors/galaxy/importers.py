@@ -14,7 +14,7 @@ from waves.wcore.adaptors.importer import AdaptorImporter
 from waves.wcore.models import Service, SubmissionOutput, Submission
 from waves.wcore.adaptors.exceptions import *
 from waves.wcore.models.inputs import *
-from waves.galaxy.adaptors.exception import GalaxyAdaptorConnectionError
+from waves.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
 
 logger = logging.getLogger(__name__)
 

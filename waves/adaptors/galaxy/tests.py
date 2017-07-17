@@ -11,9 +11,9 @@ from django.test import TestCase
 from waves.wcore.adaptors.exceptions import AdaptorConnectException
 from waves.wcore.models import Service, Job, JobInput, JobOutput, AParam
 from waves.wcore.tests.utils import TestJobWorkflowMixin
-from waves.galaxy.adaptors.tool import GalaxyJobAdaptor
-from waves.galaxy.adaptors.workflow import GalaxyWorkFlowAdaptor
-from waves.galaxy.adaptors.utils import skip_unless_galaxy, skip_unless_tool
+from waves.adaptors.galaxy.tool import GalaxyJobAdaptor
+from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
+from waves.adaptors.galaxy.utils import skip_unless_galaxy, skip_unless_tool
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class GalaxyWorkFlowRunnerTestCase(unittest.TestCase):
 
     @unittest.skip('WorkFlow not available')
     def test_update_existing_workflow(self):
-        service = Service(runner='waves.galaxy.adaptors.workflow.GalaxyWorkFlowAdaptor')
+        service = Service(runner='waves.adaptors.galaxy.workflow.GalaxyWorkFlowAdaptor')
         self.assertGreaterEqual(len(service), 0)
         for updated in service[0:1]:
             # just try for the the first one
