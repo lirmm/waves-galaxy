@@ -11,11 +11,14 @@ from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
 
 from waves.wcore.adaptors.importer import AdaptorImporter
-from waves.wcore.models import Service, SubmissionOutput, Submission
 from waves.wcore.adaptors.exceptions import *
 from waves.wcore.models.inputs import *
 from waves.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
 
+from waves.wcore.models.services import Submission, SubmissionOutput
+from waves.wcore.utils import get_service_model
+
+Service = get_service_model()
 logger = logging.getLogger(__name__)
 
 
@@ -204,7 +207,7 @@ class GalaxyToolImporter(AdaptorImporter):
         for related in tool_input.get('cases', []):
             when_value = related.get('value')
             for when_input in related['inputs']:
-                self.get_clazz(
+                when = self.get_clazz(
                     when_input.get('type', 'text')).objects.create(
                     label=when_input.get('label', when_input.get('name')),
                     name=when_input.get('name'),
@@ -229,7 +232,7 @@ class GalaxyToolImporter(AdaptorImporter):
                 except RuntimeWarning:
                     pass
                 else:
-                    conditional.dependents_inputs.append(when_input)
+                    conditional.dependents_inputs.add(when)
         return conditional
 
     def _import_text(self, tool_input, service_input):
@@ -262,9 +265,10 @@ class GalaxyToolImporter(AdaptorImporter):
         for option in _get_input_value(tool_input, 'options'):
             if option[1].strip() == '':
                 option[1] = 'None'
-            options.append('%s' % ('|'.join([option[0], option[1]])))
+            options.append('|'.join([option[0], option[1]]))
         logger.debug('List options %s', options)
         service_input.list_elements = "\n".join(options)
+        print service_input.list_elements
 
     def _import_repeat(self, tool_input, service_input=None):
         return RepeatedGroup.objects.create(name=_get_input_value(tool_input, 'name'),
@@ -284,7 +288,7 @@ class GalaxyToolImporter(AdaptorImporter):
         for tool_output in outputs:
             # logger.debug(tool_output.keys())
             logger.debug(tool_output.items())
-            service_output = SubmissionOutput.objects.create(label=tool_output.get('label'),
+            service_output = SubmissionOutput.objects.create(label=tool_output.get('label', tool_output.get('name')),
                                                              name=tool_output.get('name'),
                                                              extension=tool_output.get('format'),
                                                              edam_format=tool_output.get('edam_format'),
