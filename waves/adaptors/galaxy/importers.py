@@ -7,18 +7,17 @@ import tempfile
 
 import bioblend
 import six
+import swapper
 from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
 
-from waves.wcore.adaptors.importer import AdaptorImporter
-from waves.wcore.adaptors.exceptions import *
-from waves.wcore.models.inputs import *
 from waves.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
-
+from waves.wcore.adaptors.exceptions import *
+from waves.wcore.adaptors.importer import AdaptorImporter
+from waves.wcore.models.inputs import *
 from waves.wcore.models.services import Submission, SubmissionOutput
-from waves.wcore.utils import get_service_model
 
-Service = get_service_model()
+Service = swapper.load_model("wcore", "Service")
 logger = logging.getLogger(__name__)
 
 

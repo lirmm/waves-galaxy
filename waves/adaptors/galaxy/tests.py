@@ -60,6 +60,7 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
         service, submission = self.adaptor.importer.import_service(
             "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
         self.assertIsNotNone(service)
+        submission.adaptor = self.adaptor
         # print "service init_params", service.runner.adaptor.init_params
         # job.adaptor = service.adaptor
         job = Job.objects.create(submission=submission)
@@ -73,7 +74,7 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
         for output in submission.outputs.all():
             logger.debug("Adding expected output %s ", output.name)
             job.outputs.add(JobOutput.objects.create(job=job,
-                                                     _name=output.label,
+                                                     _name=output.name,
                                                      value=output.name,
                                                      extension=output.extension))
         job.save()
