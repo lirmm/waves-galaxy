@@ -15,9 +15,10 @@ from waves.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
 from waves.wcore.adaptors.exceptions import *
 from waves.wcore.adaptors.importer import AdaptorImporter
 from waves.wcore.models.inputs import *
-from waves.wcore.models.services import Submission, SubmissionOutput
+from waves.wcore.models import get_submission_model, SubmissionOutput, get_service_model
 
-Service = swapper.load_model("wcore", "Service")
+Submission = get_submission_model()
+Service = get_service_model()
 logger = logging.getLogger(__name__)
 
 
