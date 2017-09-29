@@ -10,7 +10,7 @@ from django.test import TestCase
 
 from waves.wcore.adaptors.exceptions import AdaptorConnectException
 from waves.wcore.models import Service, Job, JobInput, JobOutput, AParam
-from waves.wcore.tests.utils import TestJobWorkflowMixin
+from waves.wcore.tests.tests_utils import TestJobWorkflowMixin
 from waves.adaptors.galaxy.tool import GalaxyJobAdaptor
 from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
 from waves.adaptors.galaxy.utils import skip_unless_galaxy, skip_unless_tool
