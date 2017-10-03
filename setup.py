@@ -4,16 +4,18 @@ import os
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as readme:
     README = readme.read()
 
-with open(os.path.join(os.path.dirname(__file__), 'VERSION')) as version:
-    VERSION = version.readline()
-
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
+
+
+def import_version():
+    from waves.adaptors.galaxy import __version__
+    return __version__
 
 
 setup(
     name='waves-galaxy-adaptors',
-    version=VERSION,
-    packages=find_packages(exclude=("waves_galaxy/*",)),
+    version=import_version(),
+    packages=find_packages(),
     url='https://github.com/lirmm/waves-galaxy',
     license='GPLv3',
     author='Marc Chakiachvili',
@@ -29,17 +31,15 @@ setup(
     ],
     classifiers=[
         'Environment :: Web Environment',
-        'Development Status :: 4 - Beta',
+        'Framework :: Django',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        'Natural Language :: English',
-        'Programming Language :: Python',
         'Programming Language :: Python :: 2.7',
-        'Topic :: Scientific/Engineering :: Interface Engine/Protocol Translator',
+        'Topic :: Utilities',
+        'Topic :: System :: Distributed Computing',
+        'Topic :: Internet :: WWW/HTTP :: WSGI :: Application',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
-        'Operating System :: MacOS :: MacOS X',
-        'Operating System :: POSIX',
         'Operating System :: Unix'
     ],
 )

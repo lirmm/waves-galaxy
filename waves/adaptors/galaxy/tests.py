@@ -9,11 +9,14 @@ from django.conf import settings
 from django.test import TestCase
 
 from waves.wcore.adaptors.exceptions import AdaptorConnectException
-from waves.wcore.models import Service, Job, JobInput, JobOutput, AParam
+from waves.wcore.models.const import *
+from waves.wcore.models import get_service_model, Job, JobInput, JobOutput, AParam
 from waves.wcore.tests.tests_utils import TestJobWorkflowMixin
 from waves.adaptors.galaxy.tool import GalaxyJobAdaptor
 from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
 from waves.adaptors.galaxy.utils import skip_unless_galaxy, skip_unless_tool
+
+Service = get_service_model()
 
 logger = logging.getLogger(__name__)
 
@@ -60,15 +63,16 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
         service, submission = self.adaptor.importer.import_service(
             "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1")
         self.assertIsNotNone(service)
+        self.adaptor.command = "toolshed.g2.bx.psu.edu/repos/rnateam/mafft/rbc_mafft/7.221.1"
         submission.adaptor = self.adaptor
         # print "service init_params", service.runner.adaptor.init_params
         # job.adaptor = service.adaptor
         job = Job.objects.create(submission=submission)
         self.assertEqual(job.outputs.count(), 2)
-        job.job_inputs.add(JobInput.objects.create(param_type=AParam.TYPE_FILE,
+        job.job_inputs.add(JobInput.objects.create(param_type=TYPE_FILE,
                                                    value=join(dirname(__file__), 'fixtures', 'tests', 'mafft.fasta'),
                                                    name="inputs",
-                                                   command_type=AParam.OPT_TYPE_SIMPLE,
+                                                   cmd_format=OPT_TYPE_SIMPLE,
                                                    job=job))
 
         for output in submission.outputs.all():

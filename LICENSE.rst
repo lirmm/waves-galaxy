@@ -2,7 +2,7 @@
 License (GPLv3)
 ===============
 
-WAVES-galaxy-adaptor is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the `Free Software Foundation <http://www.fsf.org/>`__.
+WAVES packages are free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the `Free Software Foundation <http://www.fsf.org/>`__.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,4 +23,4 @@ We very much appreciate you using our code to do fun and interesting
 things with. We hope that while doing this you may find and fix bugs or
 make enhancements that could be useful for the greater community and
 will makes the developers aware of them by emailing to waves-webapp@googlegroups.com
-so they can be co
+so they can be considered to be added to the original code base.
