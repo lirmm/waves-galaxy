@@ -95,6 +95,5 @@ ENV/
 
 # Rope project settings
 .ropeproject
-
-data/jobs
-!data/jobs/.gitkeep
+dist
+data
