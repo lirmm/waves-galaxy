@@ -43,6 +43,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         error=waves.wcore.adaptors.const.JOB_ERROR,
         ok=waves.wcore.adaptors.const.JOB_COMPLETED
     )
+    library_dir = ""
 
     def __init__(self, command=None, protocol='http', host="localhost", port='', api_base_path='', api_endpoint='',
                  app_key=None, library_dir="", **kwargs):
@@ -266,9 +267,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
         details = waves.wcore.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
-                                                          created,
-                                                          started,
-                                                          finished, extra)
+                                                           created, started, finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']

@@ -53,7 +53,6 @@ class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
     @skip_unless_tool("MAF_To_Fasta1")
     def test_import_tool(self):
         service, submission = self.adaptor.importer.import_service("MAF_To_Fasta1")
-
         self.assertIsNotNone(service)
         self.assertGreater(submission.inputs.count(), 0)
 
