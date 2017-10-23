@@ -77,10 +77,16 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def load_tool_params(self, tool_id, for_submission):
         details = self._tool_client.get(id_=tool_id, io_details=True, link_details=True)
-        self._logger.debug('Tools detailed: %s ' % details.wrapped)
+        self._logger.debug('Tools detailed: \n%s ' % json.dumps(details.wrapped))
+        self._logger.debug('----------- IMPORT INPUTS --------------')
         for_submission.inputs = self.import_service_params(details.wrapped.get('inputs'))
+        self._logger.debug('----------- // INPUTS --------------')
+        self._logger.debug('----------- IMPORT OUTPUTS --------------')
         for_submission.outputs = self.import_service_outputs(details.wrapped.get('outputs'))
+        self._logger.debug('----------- // OUTPUTS --------------')
+        self._logger.debug('----------- IMPORT EXITCODES --------------')
         for_submission.exit_code = self.import_exit_codes([])
+        self._logger.debug('----------- // EXITCODES --------------')
 
     def load_tool_details(self, tool_id):
         """
@@ -136,18 +142,23 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def import_service_params(self, data):
         inputs = []
-        self._logger.debug("Importing %i inputs ", len(data))
+        self._logger.debug("%i inputs to import ", len(data))
+        self._logger.debug("-----------------------")
+        i = 1
         for cur_input in data:
-            self._logger.debug("Current Input %s: %s", cur_input.get('name'), cur_input.get('type'))
             tool_input_type = self.map_type(cur_input.get('type'))
-            self._logger.debug("Input type %s mapped to %s", cur_input.get('type'), tool_input_type)
+            clazz = self.get_clazz(cur_input.get('type'))
+            self._logger.info("Input #%i %s %s %s", i, cur_input.get('label'), cur_input.get('name'),
+                              cur_input.get('type'))
+            self._logger.debug('Input details: \n%s ' % json.dumps(cur_input))
+            self._logger.info("%s mapped to %s (%s)", cur_input.get('type'), tool_input_type, clazz.__class__.__name__)
             service_input = None
             if tool_input_type == 'section':
-                service_input = self.import_service_params([sect_input for sect_input in cur_input.get('inputs')])
+                service_input = self.import_service_params(cur_input.get('inputs'))
             elif tool_input_type == 'repeat':
                 repeat_group = self._import_repeat(cur_input)
                 cur_input.repeat_group = repeat_group
-                service_input = self.import_service_params([rep_input for rep_input in cur_input.get('inputs')])
+                service_input = self.import_service_params(cur_input.get('inputs'))
                 for srv_input in service_input:
                     # print "srv_input", srv_input
                     srv_input.repeat_group = repeat_group
@@ -160,6 +171,7 @@ class GalaxyToolImporter(AdaptorImporter):
                     inputs.extend(service_input)
                 else:
                     inputs.append(service_input)
+            i += 1
         return inputs
 
     def _import_param(self, tool_input):
@@ -169,14 +181,11 @@ class GalaxyToolImporter(AdaptorImporter):
         :return: AParam
         """
         try:
-            self._logger.info('Import param ' + tool_input.get('name', 'NoName') + "/" + tool_input.get('label', 'NoLabel'))
+            self._logger.info(
+                'Import param ' + tool_input.get('name', 'NoName') + "/" + tool_input.get('label', 'NoLabel'))
             if tool_input.get('is_dynamic', False):
                 raise UnmanagedInputTypeException(
                     'Dynamic field \'%s\':%s ' % (tool_input.get('name'), tool_input.get('label')))
-
-            self._logger.info("Mapped to %s " % self.get_clazz(tool_input.get('type', 'text')))
-            self._logger.info("Tool_input details %s", tool_input)
-            self._logger.debug(type(tool_input.get('optional')))
             if tool_input.get('hidden'):
                 required = None
             else:
@@ -193,7 +202,7 @@ class GalaxyToolImporter(AdaptorImporter):
             )
             # Add special type import data
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
-            self._logger.info('Import dedicated function %s ', _import_func.__name__)
+            self._logger.info('Import function %s ', _import_func.__name__)
             _import_func(tool_input, srv_input)
             if 'edam' in tool_input and 'edam_formats' in tool_input['edam']:
                 srv_input.edam_formats = \
@@ -226,19 +235,22 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def _import_conditional(self, tool_input, srv_input):
         self._logger.info('Import conditional set %s ' % tool_input.get('test_param'))
-        conditional = self._import_param(tool_input.get('test_param'))
-        self._logger.debug('Imported conditional %s', conditional)
+        test_data = tool_input.get('test_param')
+        srv_input.label = test_data.get('label', tool_input.get('name', 'NoLabel'))
+        srv_input.name = test_data.get('name', 'NoName')
+        srv_input.default = test_data.get('value', None)
+        srv_input.help_text = test_data.get('help', '')
+        srv_input.required = not test_data.get('optional')
+        self._import_select(test_data, srv_input)
+        self._logger.debug('Imported conditional %s', srv_input)
         for related in tool_input.get('cases', []):
             self._logger.info('Import case ' + related.get('value'))
             for when_input in related['inputs']:
                 when = self._import_param(when_input)
-                when.when_value = related.get('value', 'toto')
-                when.parent = conditional
+                when.when_value = related.get('value')
+                when.parent = srv_input
                 when.save()
-                print "when ", when.when_value, when.parent
-                conditional.dependents_inputs.add(when)
-
-        return conditional
+                srv_input.dependents_inputs.add(when)
 
     def _import_text(self, tool_input, service_input):
         # TODO check if format needed
@@ -247,6 +259,7 @@ class GalaxyToolImporter(AdaptorImporter):
     def _import_boolean(self, tool_input, service_input):
         service_input.true_value = tool_input.get('truevalue', 'True')
         service_input.false_value = tool_input.get('falsevalue', 'False')
+        service_input.required = False
         self._logger.debug('ToolInputBoolean %s|%s', service_input.true_value, service_input.false_value)
 
     def _import_integer(self, tool_input, service_input):
@@ -276,7 +289,6 @@ class GalaxyToolImporter(AdaptorImporter):
             options.append('|'.join([option[0], option[1]]))
         self._logger.debug('List options %s', options)
         service_input.list_elements = "\n".join(options)
-        print service_input.list_elements
 
     def _import_repeat(self, tool_input, service_input=None):
         return RepeatedGroup.objects.create(name=_get_input_value(tool_input, 'name'),
@@ -296,25 +308,29 @@ class GalaxyToolImporter(AdaptorImporter):
         for tool_output in outputs:
             # self._logger.debug(tool_output.keys())
             self._logger.debug(tool_output.items())
-            label = tool_output.get('label') if tool_output.get('label', '') != '' else tool_output.get('name')
-            service_output = SubmissionOutput.objects.create(label=label,
-                                                             name=tool_output.get('name'),
-                                                             extension=".%s" % tool_output.get('format'),
-                                                             edam_format=tool_output.get('edam_format'),
-                                                             edam_data=tool_output.get('edam_data'),
-                                                             help_text=tool_output.get('label'),
-                                                             submission=self.submission,
-                                                             file_pattern=tool_output.get('name'))
-            if tool_output.get('name').startswith('$'):
-                self._logger.debug("Value is depending on other input %s", tool_output.get('value'))
-                pass
-                # TODO repair relationship between inputs
-                # input_related_name = service_output.description[2:-1]
-                # service_output.from_input = True
-                # related_input = Input.objects.get(name=input_related_name)
-                # submission_related_output = RelatedInput(srv_input=related_input)
-                # service_output.from_input_submission.add(submission_related_output, bulk=True)
-                # service_output.description = "Issued from input '%s'" % input_related_name
+            if tool_output.get('label').startswith('$'):
+                input_api_name = tool_output.get('label')[2:-1]
+                label = tool_output.get('name')
+            else:
+                input_api_name = tool_output.get('name')
+                label = tool_output.get('label') if tool_output.get('label', '') != '' else tool_output.get('name')
+            service_output = SubmissionOutput(label=label,
+                                              name=tool_output.get('name'),
+                                              api_name=input_api_name,
+                                              extension=".%s" % tool_output.get('format'),
+                                              edam_format=tool_output.get('edam_format'),
+                                              edam_data=tool_output.get('edam_data'),
+                                              submission=self.submission,
+                                              file_pattern=tool_output.get('name'))
+            if tool_output.get('label').startswith('$'):
+                input_related_name = tool_output.get('label')[2:-1]
+                self._logger.debug("Value is depending on other input %s", tool_output.get('label')[2:-1])
+                related_input = AParam.objects.get(name=input_related_name, submission=self.submission)
+                self._logger.info('Found related \'%s\'', related_input)
+                service_output.from_input = related_input
+                service_output.file_pattern = "%s"
+                service_output.description = "Issued from input '%s'" % input_related_name
+            service_output.save()
             service_outputs.append(service_output)
             index += 1
         return service_outputs
