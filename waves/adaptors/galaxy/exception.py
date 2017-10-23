@@ -34,4 +34,4 @@ class GalaxyAdaptorConnectionError(AdaptorConnectException):
             except ValueError:
                 error_data = dict(err_msg="%s" % e)
         message = '{}'.format(error_data['err_msg'])
-        super(GalaxyAdaptorConnectionError, self).__init__(msg=message)
+        super(GalaxyAdaptorConnectionError, self).__init__(message)

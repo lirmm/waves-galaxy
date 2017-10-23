@@ -141,7 +141,8 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                         inputs[input_file.remote_input_id] = input_file.name
 
                     for input_param in job.input_params:
-                        inputs[input_param.name] = input_param.value
+                        if input_param.value != 'None' and input_param.value is not None:
+                            inputs[input_param.name] = input_param.value
                     logger.debug(u'Inputs added ' + str(inputs))
                     output_data_sets = galaxy_tool.run(inputs, history=history, wait=False)
                     for data_set in output_data_sets:
@@ -157,13 +158,13 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
                         logger.debug('Remote output details %s', output_data)
                         logger.debug('Remote output id %s', output_data['id'])
 
-                        job_output = next((x for x in job.outputs.all() if x.name == remote_output), None)
+                        job_output = next((x for x in job.outputs.all() if x.api_name == remote_output), None)
                         if job_output is not None:
                             job_output.remote_output_id = str(output_data['id'])
                             job_output.save()
                         else:
                             logger.warn('Unable to retrieve job output in job description ! [%s]', remote_output)
-                            logger.info('Searched in %s', (x.name for x in job.outputs.all()))
+                            logger.info('Searched in %s', [x.name + "/" + x.api_name for x in job.outputs.all()])
                             job.outputs.add(JobOutput.objects.create(_name=remote_output,
                                                                      job=job,
                                                                      remote_output_id=output_data['id']))

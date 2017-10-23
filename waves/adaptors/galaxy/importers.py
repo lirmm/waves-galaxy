@@ -286,7 +286,7 @@ class GalaxyToolImporter(AdaptorImporter):
         for option in _get_input_value(tool_input, 'options'):
             if option[1].strip() == '':
                 option[1] = 'None'
-            options.append('|'.join([option[0], option[1]]))
+            options.append('|'.join([option[0], option[1].strip()]))
         self._logger.debug('List options %s', options)
         service_input.list_elements = "\n".join(options)
 
@@ -309,13 +309,12 @@ class GalaxyToolImporter(AdaptorImporter):
             # self._logger.debug(tool_output.keys())
             self._logger.debug(tool_output.items())
             if tool_output.get('label').startswith('$'):
-                input_api_name = tool_output.get('label')[2:-1]
                 label = tool_output.get('name')
             else:
-                input_api_name = tool_output.get('name')
                 label = tool_output.get('label') if tool_output.get('label', '') != '' else tool_output.get('name')
+            input_api_name = tool_output.get('name')
             service_output = SubmissionOutput(label=label,
-                                              name=tool_output.get('name'),
+                                              _name=tool_output.get('name'),
                                               api_name=input_api_name,
                                               extension=".%s" % tool_output.get('format'),
                                               edam_format=tool_output.get('edam_format'),
