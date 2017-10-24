@@ -38,7 +38,7 @@ class GalaxyToolImporter(AdaptorImporter):
         float='float',
         data='file',
         select='list',
-        conditional='list',
+        conditional='conditional',
         data_collection='file',
         genomebuild='list',
     )
@@ -151,7 +151,7 @@ class GalaxyToolImporter(AdaptorImporter):
             self._logger.info("Input #%i %s %s %s", i, cur_input.get('label'), cur_input.get('name'),
                               cur_input.get('type'))
             self._logger.debug('Input details: \n%s ' % json.dumps(cur_input))
-            self._logger.info("%s mapped to %s (%s)", cur_input.get('type'), tool_input_type, clazz.__class__.__name__)
+            self._logger.info("%s mapped to %s (%s)", cur_input.get('type'), tool_input_type, clazz)
             service_input = None
             if tool_input_type == 'section':
                 service_input = self.import_service_params(cur_input.get('inputs'))
@@ -164,6 +164,8 @@ class GalaxyToolImporter(AdaptorImporter):
                     srv_input.repeat_group = repeat_group
             elif tool_input_type == 'expand':
                 self.warn(UnmanagedInputTypeException("Expand"))
+            elif tool_input_type == 'conditional':
+                service_input = self._import_conditional_set(cur_input)
             else:
                 service_input = self._import_param(cur_input)
             if service_input is not None:
@@ -198,7 +200,8 @@ class GalaxyToolImporter(AdaptorImporter):
                 default=tool_input.get('default', None),
                 help_text=tool_input.get('help', ''),
                 required=required,
-                submission=self.submission
+                submission=self.submission,
+                multiple=_get_input_value(tool_input, 'multiple') is True
             )
             # Add special type import data
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
@@ -233,28 +236,25 @@ class GalaxyToolImporter(AdaptorImporter):
             self.error(Exception('UnexpectedError for input "%s" (%s)' % (tool_input['name'], e)))
             return None
 
-    def _import_conditional(self, tool_input, srv_input):
+    def _import_conditional_set(self, tool_input):
         self._logger.info('Import conditional set %s ' % tool_input.get('test_param'))
         test_data = tool_input.get('test_param')
-        srv_input.label = test_data.get('label', tool_input.get('name', 'NoLabel'))
-        srv_input.name = test_data.get('name', 'NoName')
-        srv_input.default = test_data.get('value', None)
-        srv_input.help_text = test_data.get('help', '')
-        srv_input.required = not test_data.get('optional')
-        self._import_select(test_data, srv_input)
-        self._logger.debug('Imported conditional %s', srv_input)
+        test_param = self._import_param(test_data)
+        self._logger.debug('Imported conditional %s', test_param)
         for related in tool_input.get('cases', []):
             self._logger.info('Import case ' + related.get('value'))
             for when_input in related['inputs']:
                 when = self._import_param(when_input)
+                when.default = when_input.get('value', '')
                 when.when_value = related.get('value')
-                when.parent = srv_input
+                when.parent = test_param
                 when.save()
-                srv_input.dependents_inputs.add(when)
+                test_param.dependents_inputs.add(when)
+        return test_param
 
     def _import_text(self, tool_input, service_input):
         # TODO check if format needed
-        pass
+        service_input.default = tool_input.get('value', '')
 
     def _import_boolean(self, tool_input, service_input):
         service_input.true_value = tool_input.get('truevalue', 'True')
@@ -277,7 +277,6 @@ class GalaxyToolImporter(AdaptorImporter):
         allowed_extensions = ", ".join([".%s" % val for val in _get_input_value(tool_input, 'extensions', [])])
         self._logger.debug("Allowed extensions: %s " % allowed_extensions)
         service_input.allowed_extensions = allowed_extensions
-        service_input.multiple = _get_input_value(tool_input, 'multiple') is True
         self._logger.debug("Multiple: %s " % service_input.multiple)
 
     def _import_select(self, tool_input, service_input):
@@ -288,6 +287,9 @@ class GalaxyToolImporter(AdaptorImporter):
                 option[1] = 'None'
             options.append('|'.join([option[0], option[1].strip()]))
         self._logger.debug('List options %s', options)
+        display = _get_input_value(tool_input, 'value', None)
+        if display == 'radio':
+            service_input.list_mode = ListParam.DISPLAY_RADIO if not service_input.multiple else ListParam.DISPLAY_CHECKBOX
         service_input.list_elements = "\n".join(options)
 
     def _import_repeat(self, tool_input, service_input=None):
@@ -314,7 +316,7 @@ class GalaxyToolImporter(AdaptorImporter):
                 label = tool_output.get('label') if tool_output.get('label', '') != '' else tool_output.get('name')
             input_api_name = tool_output.get('name')
             service_output = SubmissionOutput(label=label,
-                                              _name=tool_output.get('name'),
+                                              name=tool_output.get('name'),
                                               api_name=input_api_name,
                                               extension=".%s" % tool_output.get('format'),
                                               edam_format=tool_output.get('edam_format'),

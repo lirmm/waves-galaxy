@@ -1,3 +1,2 @@
-django
 bioblend==0.8.0
-waves-core>=1.1.2
+waves-core==1.1.3

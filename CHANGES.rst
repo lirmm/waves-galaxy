@@ -1,7 +1,7 @@
 Version 1.1 - 2014-10-18
 ------------------------
 
-    - Corrected importer for Galaxy Tools
+    - Corrected importer / runner for Galaxy Tools
 
 
 Version 1.0 - 2017-09-30

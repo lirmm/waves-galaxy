@@ -26,8 +26,8 @@ setup(
     maintainer_email='vincent.lefort@lirmm.fr',
     include_package_data=True,
     install_requires=[
-        'bioblend>=0.8.0',
-        'waves-core>=1.1.1'
+        'bioblend==0.9.0',
+        'waves-core==1.1.3'
     ],
     classifiers=[
         'Environment :: Web Environment',
