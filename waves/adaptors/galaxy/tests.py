@@ -6,15 +6,15 @@ import unittest
 from os.path import dirname, join
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import override_settings
 
-from waves.wcore.adaptors.exceptions import AdaptorConnectException
-from waves.wcore.models.const import *
-from waves.wcore.models import get_service_model, Job, JobInput, JobOutput, AParam
-from waves.wcore.tests.tests_utils import TestJobWorkflowMixin
 from waves.adaptors.galaxy.tool import GalaxyJobAdaptor
-from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
 from waves.adaptors.galaxy.utils import skip_unless_galaxy, skip_unless_tool
+from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
+from waves.wcore.adaptors.exceptions import AdaptorConnectException
+from waves.wcore.models import get_service_model, Job, JobInput, JobOutput
+from waves.wcore.models.const import *
+from waves.wcore.tests import TestJobWorkflowMixin, BaseTestCase
 
 Service = get_service_model()
 
@@ -22,7 +22,21 @@ logger = logging.getLogger(__name__)
 
 
 @skip_unless_galaxy()
-class GalaxyRunnerTestCase(TestCase, TestJobWorkflowMixin):
+@override_settings(
+    WAVES_CORE={
+        'DATA_ROOT': join(settings.BASE_DIR, 'tests', 'data'),
+        'JOB_BASE_DIR': join(settings.BASE_DIR, 'tests', 'data', 'jobs'),
+        'BINARIES_DIR': join(settings.BASE_DIR, 'tests', 'data', 'bin'),
+        'SAMPLE_DIR': join(settings.BASE_DIR, 'tests', 'data', 'sample'),
+        'JOB_LOG_LEVEL': logging.DEBUG,
+        'SRV_IMPORT_LOG_LEVEL': logging.DEBUG,
+        'ADAPTORS_CLASSES': (
+            'waves.adaptors.galaxy.tool.GalaxyJobAdaptor',
+        ),
+    },
+    MEDIA_ROOT=join(dirname(settings.BASE_DIR), 'tests', 'media'),
+)
+class GalaxyRunnerTestCase(BaseTestCase, TestJobWorkflowMixin):
     def setUp(self):
         self.adaptor = GalaxyJobAdaptor(host=settings.WAVES_TEST_GALAXY_HOST,
                                         protocol=settings.WAVES_TEST_GALAXY_PROTOCOL,
