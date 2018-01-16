@@ -10,7 +10,7 @@ import requests
 from bioblend.galaxy.client import ConnectionError
 from bioblend.galaxy.objects import GalaxyInstance
 
-import waves.wcore.adaptors.const
+from waves.wcore.adaptors.const import JobStatus, JobRunDetails
 from exception import GalaxyAdaptorConnectionError
 from waves.wcore.adaptors.api import ApiKeyAdaptor
 from waves.wcore.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
@@ -36,12 +36,12 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
     _states_map = dict(
-        new=waves.wcore.adaptors.const.JOB_QUEUED,
-        queued=waves.wcore.adaptors.const.JOB_QUEUED,
-        running=waves.wcore.adaptors.const.JOB_RUNNING,
-        waiting=waves.wcore.adaptors.const.JOB_RUNNING,
-        error=waves.wcore.adaptors.const.JOB_ERROR,
-        ok=waves.wcore.adaptors.const.JOB_COMPLETED
+        new=JobStatus.JOB_QUEUED,
+        queued=JobStatus.JOB_QUEUED,
+        running=JobStatus.JOB_RUNNING,
+        waiting=JobStatus.JOB_RUNNING,
+        error=JobStatus.JOB_ERROR,
+        ok=JobStatus.JOB_COMPLETED
     )
     library_dir = ""
 
@@ -267,7 +267,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         created = remote_job.wrapped['create_time']
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
-        details = waves.wcore.adaptors.const.JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
+        details = JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
                                                            created, started, finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
