@@ -7,6 +7,7 @@ import tempfile
 import json
 import bioblend
 import six
+import re
 from bioblend import ConnectionError
 from bioblend.galaxy.objects import client
 
@@ -14,10 +15,13 @@ from waves.adaptors.galaxy.exception import GalaxyAdaptorConnectionError
 from waves.wcore.adaptors.exceptions import *
 from waves.wcore.adaptors.importer import AdaptorImporter
 from waves.wcore.models.inputs import *
+from waves.wcore.models.const import ParamType, OptType
 from waves.wcore.models import get_submission_model, SubmissionOutput, get_service_model, Runner
 
 Submission = get_submission_model()
 Service = get_service_model()
+
+logger = logging.getLogger(__file__)
 
 
 def _get_input_value(tool_input, field, default=''):
@@ -32,15 +36,15 @@ class GalaxyToolImporter(AdaptorImporter):
 
     # TODO share constants with waves_addons-webapp (moved in main adaptors module ?)
     _type_map = dict(
-        text='text',
-        boolean='boolean',
-        integer='int',
-        float='float',
-        data='file',
-        select='list',
+        text=ParamType.TYPE_TEXT,
+        boolean=ParamType.TYPE_BOOLEAN,
+        integer=ParamType.TYPE_INT,
+        float=ParamType.TYPE_DECIMAL,
+        data=ParamType.TYPE_FILE,
+        select=ParamType.TYPE_LIST,
         conditional='conditional',
-        data_collection='file',
-        genomebuild='list',
+        data_collection=ParamType.TYPE_FILE,
+        genomebuild=ParamType.TYPE_LIST,
     )
 
     _clazz_map = dict(
@@ -56,16 +60,13 @@ class GalaxyToolImporter(AdaptorImporter):
     )
 
     def get_clazz(self, type_param):
-        self._logger.debug('Mapping %s' % type_param)
+        self.logger.debug('Mapping %s' % type_param)
         param_clazz = self._clazz_map.get(type_param, None)
         if param_clazz is None:
-            self._logger.warning("Unable to map %s", type_param)
+            self.logger.warning("Unable to map %s", type_param)
             raise UnmanagedInputTypeException()
         else:
             return param_clazz
-
-    def __init__(self, adaptor):
-        super(GalaxyToolImporter, self).__init__(adaptor)
 
     def connect(self):
         """
@@ -77,16 +78,16 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def load_tool_params(self, tool_id, for_submission):
         details = self._tool_client.get(id_=tool_id, io_details=True, link_details=True)
-        self._logger.debug('Tools detailed: \n%s ' % json.dumps(details.wrapped))
-        self._logger.debug('----------- IMPORT INPUTS --------------')
+        self.logger.debug('Tools detailed: \n%s ' % json.dumps(details.wrapped))
+        self.logger.debug('----------- IMPORT INPUTS --------------')
         for_submission.inputs = self.import_service_params(details.wrapped.get('inputs'))
-        self._logger.debug('----------- // INPUTS --------------')
-        self._logger.debug('----------- IMPORT OUTPUTS --------------')
+        self.logger.debug('----------- // INPUTS --------------')
+        self.logger.debug('----------- IMPORT OUTPUTS --------------')
         for_submission.outputs = self.import_service_outputs(details.wrapped.get('outputs'))
-        self._logger.debug('----------- // OUTPUTS --------------')
-        self._logger.debug('----------- IMPORT EXITCODES --------------')
+        self.logger.debug('----------- // OUTPUTS --------------')
+        self.logger.debug('----------- IMPORT EXITCODES --------------')
         for_submission.exit_code = self.import_exit_codes([])
-        self._logger.debug('----------- // EXITCODES --------------')
+        self.logger.debug('----------- // EXITCODES --------------')
 
     def load_tool_details(self, tool_id):
         """
@@ -142,16 +143,16 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def import_service_params(self, data):
         inputs = []
-        self._logger.debug("%i inputs to import ", len(data))
-        self._logger.debug("-----------------------")
+        self.logger.debug("%i inputs to import ", len(data))
+        self.logger.debug("-----------------------")
         i = 1
         for cur_input in data:
             tool_input_type = self.map_type(cur_input.get('type'))
             clazz = self.get_clazz(cur_input.get('type'))
-            self._logger.info("Input #%i %s %s %s", i, cur_input.get('label'), cur_input.get('name'),
+            self.logger.info("Input #%i %s %s %s", i, cur_input.get('label'), cur_input.get('name'),
                               cur_input.get('type'))
-            self._logger.debug('Input details: \n%s ' % json.dumps(cur_input))
-            self._logger.info("%s mapped to %s (%s)", cur_input.get('type'), tool_input_type, clazz)
+            self.logger.debug('Input details: \n%s ' % json.dumps(cur_input))
+            self.logger.info("%s mapped to %s (%s)", cur_input.get('type'), tool_input_type, clazz)
             service_input = None
             if tool_input_type == 'section':
                 service_input = self.import_service_params(cur_input.get('inputs'))
@@ -183,7 +184,9 @@ class GalaxyToolImporter(AdaptorImporter):
         :return: AParam
         """
         try:
-            self._logger.info(
+            logger.info(
+                'Import param ' + tool_input.get('name', 'NoName') + "/" + tool_input.get('label', 'NoLabel'))
+            self.logger.info(
                 'Import param ' + tool_input.get('name', 'NoName') + "/" + tool_input.get('label', 'NoLabel'))
             if tool_input.get('is_dynamic', False):
                 raise UnmanagedInputTypeException(
@@ -193,7 +196,7 @@ class GalaxyToolImporter(AdaptorImporter):
             else:
                 required = not tool_input.get('optional')
             ParamClazz = self.get_clazz(tool_input.get('type', 'text'))
-            self._logger.info('Creating a %s ' % ParamClazz.__name__)
+            self.logger.info('Creating a %s ' % ParamClazz.__name__)
             srv_input = ParamClazz.objects.create(
                 label=tool_input.get('label', tool_input.get('name', 'NoLabel')),
                 name=tool_input.get('name', 'NoName'),
@@ -205,7 +208,7 @@ class GalaxyToolImporter(AdaptorImporter):
             )
             # Add special type import data
             _import_func = getattr(self, '_import_' + tool_input.get('type', 'text'))
-            self._logger.info('Import function %s ', _import_func.__name__)
+            self.logger.info('Import function %s ', _import_func.__name__)
             _import_func(tool_input, srv_input)
             if 'edam' in tool_input and 'edam_formats' in tool_input['edam']:
                 srv_input.edam_formats = \
@@ -215,11 +218,12 @@ class GalaxyToolImporter(AdaptorImporter):
             srv_input.save()
             return srv_input
         except UnmanagedInputTypeException as e:
-            self._logger.error(e)
+            self.logger.error(e)
+
             self.warn(e)
             return None
         except KeyError as e:
-            self._logger.error(e)
+            self.logger.error(e)
             self.warn(
                 UnManagedAttributeTypeException(
                     "Type:%s|Name:%s" % (tool_input.get('type', 'NA'), tool_input.get('name', 'NA'))))
@@ -229,27 +233,30 @@ class GalaxyToolImporter(AdaptorImporter):
                 UnManagedAttributeException(
                     "Type:%s|Name:%s|Label:%s" % (tool_input.get('type', 'NA'), tool_input.get('name', 'NA'),
                                                   tool_input.get('label', 'NA'))))
-            self._logger.warning("Attribute error %s", e.message)
+            self.logger.warning("Attribute error %s", e.message)
             return None
         except Exception as e:
-            self._logger.exception(e)
+            self.logger.exception(e)
             self.error(Exception('UnexpectedError for input "%s" (%s)' % (tool_input['name'], e)))
             return None
 
     def _import_conditional_set(self, tool_input):
-        self._logger.info('Import conditional set %s ' % tool_input.get('test_param'))
+        self.logger.info('Import conditional set %s ' % tool_input.get('test_param'))
         test_data = tool_input.get('test_param')
         test_param = self._import_param(test_data)
-        self._logger.debug('Imported conditional %s', test_param)
+        self.logger.debug('Imported conditional %s', test_param)
         for related in tool_input.get('cases', []):
-            self._logger.info('Import case ' + related.get('value'))
+            self.logger.info('Import case ' + related.get('value'))
             for when_input in related['inputs']:
                 when = self._import_param(when_input)
-                when.default = when_input.get('value', '')
-                when.when_value = related.get('value')
-                when.parent = test_param
-                when.save()
-                test_param.dependents_inputs.add(when)
+                if when is not None:
+                    when.default = when_input.get('value', '')
+                    when.when_value = related.get('value')
+                    when.parent = test_param
+                    when.save()
+                    test_param.dependents_inputs.add(when)
+                else:
+                    self.logger.warning("Unable to import this param %s ", when_input)
         return test_param
 
     def _import_text(self, tool_input, service_input):
@@ -260,7 +267,7 @@ class GalaxyToolImporter(AdaptorImporter):
         service_input.true_value = tool_input.get('truevalue', 'True')
         service_input.false_value = tool_input.get('falsevalue', 'False')
         service_input.required = False
-        self._logger.debug('ToolInputBoolean %s|%s', service_input.true_value, service_input.false_value)
+        self.logger.debug('ToolInputBoolean %s|%s', service_input.true_value, service_input.false_value)
 
     def _import_integer(self, tool_input, service_input):
         return self._import_number(tool_input, service_input)
@@ -275,9 +282,9 @@ class GalaxyToolImporter(AdaptorImporter):
 
     def _import_data(self, tool_input, service_input):
         allowed_extensions = ", ".join([".%s" % val for val in _get_input_value(tool_input, 'extensions', [])])
-        self._logger.debug("Allowed extensions: %s " % allowed_extensions)
+        self.logger.debug("Allowed extensions: %s " % allowed_extensions)
         service_input.allowed_extensions = allowed_extensions
-        self._logger.debug("Multiple: %s " % service_input.multiple)
+        self.logger.debug("Multiple: %s " % service_input.multiple)
 
     def _import_select(self, tool_input, service_input):
         service_input.default = _get_input_value(tool_input, 'value')
@@ -286,7 +293,7 @@ class GalaxyToolImporter(AdaptorImporter):
             if option[1].strip() == '':
                 option[1] = 'None'
             options.append('|'.join([option[0], option[1].strip()]))
-        self._logger.debug('List options %s', options)
+        self.logger.debug('List options %s', options)
         display = _get_input_value(tool_input, 'value', None)
         if display == 'radio':
             service_input.list_mode = ListParam.DISPLAY_RADIO if not service_input.multiple else ListParam.DISPLAY_CHECKBOX
@@ -304,12 +311,12 @@ class GalaxyToolImporter(AdaptorImporter):
         return self._import_select(tool_input, service_input)
 
     def import_service_outputs(self, outputs):
-        self._logger.debug(u'Managing service outputs')
+        self.logger.debug(u'Managing service outputs')
         service_outputs = []
         index = 0
         for tool_output in outputs:
-            # self._logger.debug(tool_output.keys())
-            self._logger.debug(tool_output.items())
+            # self.logger.debug(tool_output.keys())
+            self.logger.debug(tool_output.items())
             if tool_output.get('label').startswith('$'):
                 label = tool_output.get('name')
             else:
@@ -323,14 +330,19 @@ class GalaxyToolImporter(AdaptorImporter):
                                               edam_data=tool_output.get('edam_data'),
                                               submission=self.submission,
                                               file_pattern=tool_output.get('name'))
-            if tool_output.get('label').startswith('$'):
-                input_related_name = tool_output.get('label')[2:-1]
-                self._logger.debug("Value is depending on other input %s", tool_output.get('label')[2:-1])
-                related_input = AParam.objects.get(name=input_related_name, submission=self.submission)
-                self._logger.info('Found related \'%s\'', related_input)
-                service_output.from_input = related_input
-                service_output.file_pattern = "%s"
-                service_output.description = "Issued from input '%s'" % input_related_name
+
+            m = re.match(r"\$\{([a-z]+)\.([a-z]+)\}", tool_output.get('label'))
+            if m is not None:
+                input_related_name = m.group(2)
+                self.logger.info("Value is depending on other input %s", m.group(1, 2))
+                related_input = AParam.objects.filter(name=input_related_name, submission=self.submission).first()
+                if related_input:
+                    self.logger.info('Found related \'%s\'', related_input)
+                    service_output.from_input = related_input
+                    service_output.file_pattern = "%s"
+                    service_output.description = "Issued from input '%s'" % input_related_name
+                else:
+                    self.logger.warning('Related input not found %s', m.group(1,2))
             service_output.save()
             service_outputs.append(service_output)
             index += 1
@@ -365,34 +377,34 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
             raise GalaxyAdaptorConnectionError(e)
 
     def _list_remote_inputs(self, tool_id):
-        self._logger.warn('Not Implemented yet')
+        self.logger.warn('Not Implemented yet')
         wl = self._tool_client.get(id_=tool_id)
         wc = bioblend.galaxy.workflows.WorkflowClient(self._tool_client.gi)
         with tempfile.TemporaryFile() as tmp_file:
             wc.export_workflow_to_local_path(workflow_id=tool_id,
                                              file_local_path=os.path.join(tempfile.gettempdir(), tmp_file.name),
                                              use_default_filename=False)
-        if self._logger.isEnabledFor(logging.DEBUG):
-            self._logger.debug('inputs %s', wl.inputs)
-            self._logger.debug('inputs_i %s', wl.data_input_ids)
-            self._logger.debug('inputs %s', wl.inputs['0'])
-            self._logger.debug('labels %s', wl.input_labels)
-            self._logger.debug('runnable %s', wl.is_runnable)
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug('inputs %s', wl.inputs)
+            self.logger.debug('inputs_i %s', wl.data_input_ids)
+            self.logger.debug('inputs %s', wl.inputs['0'])
+            self.logger.debug('labels %s', wl.input_labels)
+            self.logger.debug('runnable %s', wl.is_runnable)
         for id_step in wl.sorted_step_ids():
             step = wl.steps[id_step]
-            if self._logger.isEnabledFor(logging.DEBUG):
-                self._logger.debug('step  %s %s %s:', step.type, ' name ', step.name)
-                self._logger.debug('input_steps %s', step.input_steps)
-                self._logger.debug('tool_inputs %s', step.tool_inputs)
-                self._logger.debug('tool_id %s', step.tool_id)
+            if self.logger.isEnabledFor(logging.DEBUG):
+                self.logger.debug('step  %s %s %s:', step.type, ' name ', step.name)
+                self.logger.debug('input_steps %s', step.input_steps)
+                self.logger.debug('tool_inputs %s', step.tool_inputs)
+                self.logger.debug('tool_id %s', step.tool_id)
         return wl.inputs
 
     def _list_remote_outputs(self, tool_id):
-        self._logger.warn('Not Implemented yet')
+        self.logger.warn('Not Implemented yet')
         return []
 
     def import_exit_codes(self, tool_id):
-        self._logger.warn('Not Implemented yet')
+        self.logger.warn('Not Implemented yet')
         return []
 
     def load_tool_details(self, tool_id):
@@ -412,6 +424,6 @@ class GalaxyWorkFlowImporter(GalaxyToolImporter):
                                       submission=self.service,
                                       default=dic['value'],
                                       mandatory=True)
-            self._logger.debug('Service input %s ', service_input)
+            self.logger.debug('Service input %s ', service_input)
             service_inputs.append(service_input)
         return service_inputs

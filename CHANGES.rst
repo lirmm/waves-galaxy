@@ -1,3 +1,9 @@
+Version 1.2 - 2014-02-07
+------------------------
+
+    - [Updated] - updated dependency to waves-core 1.1.6
+    -
+
 Version 1.1 - 2014-10-18
 ------------------------
 

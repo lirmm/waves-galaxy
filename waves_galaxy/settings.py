@@ -86,7 +86,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
-LOGGING_CONFIG = None
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -122,11 +121,16 @@ LOGGING = {
         'waves': {
             'handlers': ['console'],
             'level': 'DEBUG',
-            'propagate': False,
+            'propagate': True,
         },
+        'waves.galaxy.adaptors.importer': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        }
     }
 }
-logging.config.dictConfig(LOGGING)
+
 configFile = os.path.join(os.path.dirname(__file__), 'settings.ini')
 Config = ConfigParser.SafeConfigParser(
     dict(WAVES_TEST_GALAXY_PORT='')

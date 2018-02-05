@@ -13,8 +13,8 @@ from waves.adaptors.galaxy.utils import skip_unless_galaxy, skip_unless_tool
 from waves.adaptors.galaxy.workflow import GalaxyWorkFlowAdaptor
 from waves.wcore.adaptors.exceptions import AdaptorConnectException
 from waves.wcore.models import get_service_model, Job, JobInput, JobOutput
-from waves.wcore.models.const import *
-from waves.wcore.tests import TestJobWorkflowMixin, BaseTestCase
+from waves.wcore.models.const import ParamType, OptType
+from waves.wcore.tests.base import BaseTestCase, TestJobWorkflowMixin
 
 Service = get_service_model()
 
@@ -82,10 +82,10 @@ class GalaxyRunnerTestCase(BaseTestCase, TestJobWorkflowMixin):
         # job.adaptor = service.adaptor
         job = Job.objects.create(submission=submission)
         self.assertEqual(job.outputs.count(), 2)
-        job.job_inputs.add(JobInput.objects.create(param_type=TYPE_FILE,
+        job.job_inputs.add(JobInput.objects.create(param_type=ParamType.TYPE_FILE,
                                                    value=join(dirname(__file__), 'fixtures', 'tests', 'mafft.fasta'),
                                                    name="inputs",
-                                                   cmd_format=OPT_TYPE_SIMPLE,
+                                                   cmd_format=OptType.OPT_TYPE_SIMPLE,
                                                    job=job))
 
         for output in submission.outputs.all():
