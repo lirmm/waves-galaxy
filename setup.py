@@ -27,7 +27,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'bioblend==0.9.0',
-        'waves-core==1.1.6'
+        'waves-core==1.1.7'
     ],
     classifiers=[
         'Environment :: Web Environment',
