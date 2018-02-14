@@ -24,8 +24,11 @@ __all__ = ['GalaxyJobAdaptor']
 
 
 class GalaxyJobAdaptor(ApiKeyAdaptor):
-    """This is Galaxy bioblend api WAVES adaptors, maps call to Galaxy API to expected behaviour from base class
+    """
+    This is Galaxy bioblend api WAVES adaptors, maps call to Galaxy API to expected behaviour from base class
+
     Expected parameters to init call (dictionary):
+
     **Init parameters:**
         :param host: the ip address where Galaxy is set up (default: http://localhost)
         :param username: remote user name in Galaxy server
@@ -56,7 +59,8 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
     def init_params(self):
         """
         Galaxy remote platform expected initialization parameters, defaults can be set in waves.wcore.adaptors.addons.env
-        - **returns**
+
+        **returns**
             - host: Galaxy full host url
             - port: Galaxy host port
             - app_key: Galaxy remote user api_key
@@ -268,7 +272,7 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         name = job.title
         exit_code = remote_job.wrapped['exit_code']
         details = JobRunDetails(job.id, str(job.slug), remote_job.id, name, exit_code,
-                                                           created, started, finished, extra)
+                                created, started, finished, extra)
         logger.debug('Job Exit Code %s %s', exit_code, finished)
         # TODO see if remove history is needed
         # galaxy_allow_purge = self.connector.gi.config.get_config()['allow_user_dataset_purge']

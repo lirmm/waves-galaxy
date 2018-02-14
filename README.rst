@@ -4,6 +4,7 @@ ReadME
 WAVES adaptors classes are aimed to be used inside a WAVES-webapp project, but could be useful elsewhere depending on your
 requirements
 
+
 Features
 --------
 
@@ -17,8 +18,8 @@ Waves Galaxy adaptors is a set of classes intended to wrapped remote calculation
 Contribute
 ----------
 
-- Issue Tracker: https://github.com/waves-galaxy/issues
-- Source Code: https://github.com/waves-galaxy
+- Issue Tracker: https://github.com/lirmm/waves-galaxy/issues
+- Source Code: https://github.com/lirmm/waves-galaxy
 
 Support
 -------

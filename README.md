@@ -17,4 +17,6 @@ Installation
 
 - See WAVES web app packages (https://github.com/lirmm/waves-webapp) for further information as this packages depends on
 it
-- pip command : pip install https://github.com/lirmm/waves-webapp.git
+
+- documentation available at 
+

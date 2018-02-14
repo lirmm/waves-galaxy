@@ -1,9 +1,9 @@
-Welcome to WAVES's Demo documentation !
-=======================================
+Welcome to WAVES galaxy adapter documentation !
+===============================================
 
 .. toctree::
     :maxdepth: 1
-    :caption: Use WAVES
+    :caption: Use Galaxy adapter
 
     readme
     authors
