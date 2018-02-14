@@ -20,7 +20,7 @@ Add package to your virtual env
 1. Configure WAVES
 ------------------
 
-    You simply enable waves-galaxy adaptors in your settings.py file
+    You simply enable waves-galaxy adapters in your settings.py file
 
     .. code-block:: python
 
