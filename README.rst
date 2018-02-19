@@ -11,6 +11,7 @@ Features
 Waves Galaxy adaptors is a set of classes intended to wrapped remote calculation devices interface into the WAVES unified ServiceRunner API through Galaxy Server (https://usegalaxy.org)
 
     .. seealso::
+
         https://github.com/lirmm/waves-core
 
         https://galaxyproject.org/
