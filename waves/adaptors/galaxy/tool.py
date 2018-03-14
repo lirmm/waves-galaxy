@@ -14,7 +14,6 @@ from waves.wcore.adaptors.const import JobStatus, JobRunDetails
 from exception import GalaxyAdaptorConnectionError
 from waves.wcore.adaptors.api import ApiKeyAdaptor
 from waves.wcore.adaptors.exceptions import AdaptorJobException, AdaptorExecException, AdaptorConnectException
-from waves.wcore.authentication.key import WavesApiKeyAuthentication
 from waves.wcore.models import JobOutput
 
 logger = logging.getLogger(__name__)
@@ -36,7 +35,6 @@ class GalaxyJobAdaptor(ApiKeyAdaptor):
         :param library_dir: remote library dir, where to place files in order to create galaxy histories
 
     """
-    authentication_class = WavesApiKeyAuthentication
     name = 'Galaxy remote tool adaptor (api_key)'
     _states_map = dict(
         new=JobStatus.JOB_QUEUED,

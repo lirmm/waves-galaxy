@@ -8,8 +8,8 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 def import_version():
-    from waves.adaptors.galaxy import __version__
-    return __version__
+    from waves.adaptors.galaxy import __version_detail__
+    return __version_detail__
 
 
 setup(

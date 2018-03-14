@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-__version_detail__ = '1.1.4.0'
+__version_detail__ = '1.1.4.1'
 __version__ = '1.1.4'
 __author__ = 'Marc Chakiachvili, MAB Team'
 __licence__ = 'GPLv3'
